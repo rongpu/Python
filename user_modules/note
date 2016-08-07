@@ -1,0 +1,4 @@
+To use the modules, add something like this at the beginning:
+
+sys.path.append('/home/rongpu/Dropbox/Python/user_modules/')
+from user_common import hlmean, mad

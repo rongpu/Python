@@ -1,0 +1,204 @@
+Test
+
+Miscellaneous notes
+===================
+
+--------- 
+
+Own *DIRECT* flat fields - 
+
+You see residual features in the COSMOS F140W images that suggest that the pipeline flat field files are inadequate.  When I try to apply my own flat field, for some reason the exposure-weighted input images in Multidrizzle always had a few "nan" pixels
+that killed its ImageStats function.  I added the following lines to mate /usr/stsci/pyssg/2.5.4/multidrizzle/wfc3_input.py.
+
+bad = ~np.isfinite(_sciext.data)
+if len(_sciext.data[bad] > 0):
+    print '[GBB] replace nan pixels with 0...'
+    _sciext.data[bad] = 0.
+
+
+---------
+
+Idea: stack grism spectra of bright stars to make a contamination model that 
+accounts for the changing PSF size and the flux in the wings.
+
+---------
+
+**** Done! *** 4/25/11 - analysis.make_fluximage()
+
+Idea for adding color information to the 3D-HST fluxcubes:
+
+1) Specify a given root name, which has F140W detection + segm. images
+
+2) Loop through all of the objects in the detected catalog:
+
+	a) For each object, look for a match in the photometric catalog
+	b) Interpolate an observed-frame F140W photometric flux
+	c) Make a fake "J" image by taking the F140W segmentation image and scaling it by the "J-F140W" catalog color.
+	d) If no match found in the photometric catalog, just use the F140W flux
+	
+The trickiest part will be getting the interpolated F140W flux, which needs to be done because the F140W MAG_AUTO might not correspond exactly to total fluxes in the photometric catalog (though could try it as it is for a start).
+
+---------
+
+Idea for fitting redshifts:  take the eazy templates and convolve them with the thumbnails to generate 2D spectra.  Then do a sort of redshift-fitting code on the 2D spectra themselves.  Could use the photometric p(z) as a prior, for example.
+
+It's pretty easy to generate the 2D convolved spectra.  Note that you have to multiply them by the grism response curve to be able to compare to the aXe 2D spectra.
+
+---------
+
+*** DONE *** (process_grism.update_catalogs) (Apr. 24)
+
+Add a flag to the catalog that indicates if an object won't have a grism spectrum or 2d thumbnail because it falls off of the grism coverage.
+
+---------
+I tried to run the reduction script with ASN files that contain *all* of the available observations for GOODS-N.  I got as far as iolprep, which broke because one of the iraf tasks it uses (wtran) doesn't output its results with enough decimal precision given the input image size.  I edited /usr/stsci/stsdas/python/axe/axesrc/awtran.py as follows:
+
+#xin = float(split(line)[1])
+#yin = float(split(line)[2])
+#xout = float(split(line)[4])
+#yout = float(split(line)[5])
+# (gbb) above breaks for 
+# Xin,Yin:    504.67820-13194.11936 Xout,Yout:   5208.18000   851.60700
+# (a very large input image)
+if line.find('***') > 0:
+    xin = -9000
+    yin = -9000
+    xout = -9000
+    yout = -9000
+else:
+    xin = float(line[9:22])
+    yin = float(line[22:34])
+    xout = float(line[48:58])
+    yout = float(line[58:-1])
+
+---------
+
+To add SVN keyword properties:
+
+svn propset svn:keywords "Rev URL Author Date" combine_phot.py
+
+---------
+
+AXEPREP warns you if only a few percent of the grism image is available for
+computing the background level. This becomes a problem when you have a low S/N
+threshold value for the object catalog and therefore have grism spectra that
+nearly cover the image.  The prompt interrupts the flow of the automated pipeline.
+
+Edit the following lines as so in /usr/stsci/stsdas/pkg/analysis/slitless/axe/axesrc, line 457
+
+# idec = IrafParS(['         Continue or quit? [(y)es/(q)uit] :(q)','string','h'],'whatever')
+# idec.getWithPrompt()
+# dec = idec.value.strip()
+dec = 'Y'
+
+------------------------------------------------------------------
+------------------------------------------------------------------
+------------------          To Do                -----------------
+------------------------------------------------------------------
+------------------------------------------------------------------
+
+[[[[[DONE]]]]]
+Add link to CDS vizier catalog query from webpage: e.g. http://vizier.u-strasbg.fr/viz-bin/VizieR?-c=12:36:36.85+%2B62:06:58.7&-c.rs=1
+
+-----------
+[[[[[DONE]]]]]
+Pieter's 1D profile along dispersion axis
+
+----------
+[[[[[DONE]]]]]
+Add FITS images to website
+
+--------
+[[[[[DONE]]]]]
+Make code more modular, e.g. easy regeneration of webpages and/or images, FITS files
+
+--------
+
+[[[[[The first part is done with wdrizzle, but the alignment to the spectral resolution isn't implemented yet]]]]]
+
+currently, plotting.plotThumb is stupid and just takes a square region out of the direct DRZ file centered on the object position in the catalog.  Since this image has an arbitrary orientation (N-up) w.r.t the grism throw, the thumbnails don't line up with the orientation of the spectra, i.e. 2D emission line profiles.  Can partly get around this by using wdrizzle to make a cutout of the DRZ image centered on the position of each object, rotated back to the original pixel orientation of the direct/grism images.
+
+Note that the thumbnail, in principle, needs separate scales for the spatial and spectral axes.  Can almost get by with a single scale of 0.12825443957361446 "/pix when using a drizzle wavelength resolution of 46.5A (corresponding to the center pixel), but the scale will be off by ~2% as you get towards the edge of the direct image.  Workaround could be providing two extensions of the thumbnail, one with the correct spatial scale and the other with the correct (perpendicular) wavelength pixel scale.  But ideally would have a single image 
+that you could cross-correlate with the spectrum.
+
+--------
+
+Add segmentation image to 2D direct thumbnails.  Can wdrizzle it too (see above), but be careful of fractional pixel drizzles that turn the segmentation integer to some smaller float value.
+
+--------
+
+Eventually, use aXe to extract 2D spectra and then model them by hand.
+
+--------
+
+If you subtract the model image from the grism image, you see that the model is frequently more spatially extended than the actual spectra, i.e. there is a narrow core in the residual image.  Is this the result of parameters to the aXe IRAF tasks or is it coming from somewhere deep within aXe?  I would think that it would get the profiles right if it's using the direct image segmentation map, though perhaps there's a smoothing term somewhere when it is translated to the grism exposures.
+
+[[[[[[UPDATE 11/9/10]]]]]]
+  I found that lowering the SExtractor detection threshold helps to mitigate the problem that the observed spectra are more extended than the model spectra.  The model is only as extended as the segmentation image, which can miss faint wings with high values of the detection threshold.  I added a parameter "LIMITING_MAGNITUDE" to allow you to set a low detection threshold and then exclude many of the faintest objects you would find from the spectral analysis.
+
+--------
+
+****
+I have added a hack that scales the 0th order sensitivity curve by 
+a factor of 3.6, empirically determined to make the model images come out
+about right.  It's not clear where this error comes from, but the 
+0th order sensitivity curve defined in wfc3_abscal_IRg141_0th_sens.fits
+seems much to faint.  The aXe manual suggests that the G141 0th order differs by about 0.5 mag from the 1st order.  Plotting the two sensitivity curves indicates
+that the expected difference would be much larger (but also larger than the determined factor of 3.6)
+****
+
+Figure out why zeroth order spectra always come out too faint in the aXe models. 
+Possible causes:
+    1) problem with sensitivity curve in CONF
+    2) Something related to the fluxcube (e.g. zeropoints in other bands)
+    3) Bug in aXe somewhere
+    
+-------
+
+[[[[[ DONE ]]]]]
+
+Have figured out how to add zoom to google map outputs.  New coordinate reference is (0,0), so need to update the HTML script accordingly.
+
+Add latitude center for computing coordinates.
+
+--------
+
+I have figured out in principle how to use a pre-computed direct image that is larger than the grism footprint in order to generate a contamination model that includes objects at the edge of the field.  In practice, there seems to be a bug, however in that the model spectra have a shift with respect to the grism exposures.  The shift is proportional to, but not equal to the size of the "dimension_info" extended boundaries.  Note also that "dimension_info" also appear to work contrary to the description in the aXe manual, i.e. dimension_info = 200,200,0,0 will include sources within 200 pix beyond the grism edges, rather than 200 < x < x_max+200.
+
+I can't find a hack fix for this (e.g. I tried forcing the FLX image WCS to be the same as the grism FLT images), so will need to check with the aXe people since the mode where you don't have a direct image for each grism exposure seems to be an important way to analyze the grism spectra (i.e. PEARS or the Riess program)
+
+*** Update 12/7/10 ***
+1) Have confirmed with Martin Kuemmel that the sign of the dimension_info values is wrong in the manual and that the above observation is correct.
+
+2) I've mostly figured out the offset problem, which seems to be caused by the reference pixel defined in the coeffs1.dat files.  By default it is the center pixel of the WFC3 image (507, 507), but this is no longer the center of the image if you add padding around the sides.  This can be pretty easily fixed by just shifting the reference pixel accordingly, e.g. in fcubeobjs.py:
+
+#### GBB: Need to adjust the reference pixel in the coeffs.dat file
+####      output image sizes different than the native image size,
+####      e.g. 1014 x 1014 for WFC3
+try:
+    coeffs_lines = open(self.coef).readlines()
+    shape = (self.inima_dims[0]+2*x_excess,
+             self.inima_dims[1]+2*y_excess)
+             
+    if shape != (1014, 1014):
+        for i, line in enumerate(coeffs_lines):
+            if line.strip().startswith('refpix'):
+                ### Default to center pixel
+                coeffs_lines[i] = 'refpix %9.3f %9.3f\n' %(shape[0]*1./2, shape[1]*1./2)
+    
+    fp = open('/tmp/coeffs1.dat','w')
+    fp.writelines(coeffs_lines)
+    fp.close()
+    print 'XXX GBB XXX: adjusted `refpix`, %s -> /tmp/coeffs1.dat' %(self.coef)
+    self.coef = '/tmp/coeffs1.dat'
+except:
+    print 'XXX GBB XXX: Some problem with adjusting the reference pixel in %s\n' %(self.coef)
+    pass
+
+*** Note, am now using taxe2.1, and need to change scripts as described above to remove the prompt when you allow a faint object threshold and there is a relatively small number of pixels available for the background estimation
+----- DONE, axepreptor.py changed -----
+
+============
+
+changed 'writeToFile' methods to 'write'
+
