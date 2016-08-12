@@ -53,7 +53,7 @@ if keep_cat2_q==False:
 
     cat2.sort('idx')
     i=0
-    while i<len(cat2)-2:
+    while i<=len(cat2)-2:
         if cat2['idx'][i]>=0 and cat2['idx'][i]==cat2['idx'][i+1]:
             end=i+1
             while end+1<=len(cat2)-1 and cat2['idx'][i]==cat2['idx'][end+1]:
