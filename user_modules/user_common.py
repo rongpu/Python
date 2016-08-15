@@ -57,7 +57,7 @@ def hlmean(data,nsamp=-1):
                 index+=1
     else:
         if nsamp < 0:
-            nsamp=200.*ndata
+            nsamp=200*ndata
         idx=np.floor(np.random.rand(nsamp,2)*ndata)
         idx=idx.astype(np.int64,copy=False)
         pairmean=np.sum(data[idx],axis=1)/2.
