@@ -206,9 +206,11 @@ def poly_val2d(x, y, m):
 
 # ---------------------------------------------------
 
+
 def extrap1d(x, y, kind='linear', extrap='constant'):
     '''
-    Constant or linear extrapolation. 
+    Interpolation and extrapolation in one function. 
+    Constant (default) and linear extrapolation are supported. 
 
     INPUT:  
     1D array of x and y values;
@@ -220,29 +222,32 @@ def extrap1d(x, y, kind='linear', extrap='constant'):
 
     '''
     interp = interp1d(x,y, kind=kind)
-    xs = interp.x
-    ys = interp.y
 
     if (extrap!='constant') & (extrap!='linear'):
         print('Invalid extrapolation method "'+extrap+'". The default linear extrapolation is used.')
     if extrap=='linear':
-        def pointwise(x):
-            if x < xs[0]:
-                return ys[0]+(x-xs[0])*(ys[1]-ys[0])/(xs[1]-xs[0])
-            elif x > xs[-1]:
-                return ys[-1]+(x-xs[-1])*(ys[-1]-ys[-2])/(xs[-1]-xs[-2])
+        def pointwise(xx):
+            if xx < x[0]:
+                return y[0]+(xx-x[0])*(y[1]-y[0])/(x[1]-x[0])
+            elif xx > x[-1]:
+                return y[-1]+(xx-x[-1])*(y[-1]-y[-2])/(x[-1]-x[-2])
             else:
-                return interp(x)
+                return interp(xx)
     else:
-        def pointwise(x):
-            if x < xs[0]:
-                return ys[0]
-            elif x > xs[-1]:
-                return ys[-1]
+        def pointwise(xx):
+            if xx < x[0]:
+                return y[0]
+            elif xx > x[-1]:
+                return y[-1]
             else:
-                return interp(x)     
+                return interp(xx)
 
-    def ufunclike(xs):
-        return np.array(map(pointwise, np.array(xs)))
+    def ufunclike(x):
+        if isinstance(x, np.ndarray):
+            return np.array(map(pointwise, np.array(x)))
+        elif isinstance(x, list):
+            return np.array(map(pointwise, np.array(x)))
+        else:
+            return np.array(map(pointwise, [x]))
 
     return ufunclike
