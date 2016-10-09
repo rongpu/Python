@@ -1,5 +1,3 @@
-# Work in progress
-
 # Matching between two catalogs
 # Use cat1 data to create a catalog that is line-matched to cat2
 
@@ -26,31 +24,50 @@ import fitsio
 # search radius in arcsec
 search_radius = 1.
 
-fitsio_q = True
+fitsio_q = False # use fitsio to read cat2
+save_q = False # save catalog
+region_q = False # region selection - WARNING: MAY NOT WORK!!!!!!!
 correct_offset_q = True
 plot_q = True
 verbose = True
 
-filename1 = 'decals.fits'
-filename2 = 'deep2.fits'
-output_filename = 'decals-dr3-deep2.fits'
+cat1_path = '/Users/roz18/Documents/Data/LSST_photo-z_testbed/Cross-identification/alldeep.egs.uniq.2012jun13.fits'
+cat2_path = '/Users/roz18/Documents/Data/LSST_photo-z_testbed/Cross-identification/Moffat v0.6/3D-HST_Terapix_Subaru_30_31_combined_v0.6b.fits'
+output_path = 'whatever.fits'
 
 #---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---
 
 if verbose:
     print("Loading data...")
-cat1, hdr1 = fits.getdata(filename1, ext=1, header=True)
+cat1, hdr1 = fits.getdata(cat1_path, ext=1, header=True)
 if fitsio_q:
     # Not case sensitive here
-    cat2 = fitsio.read(filename2, columns=['ra', 'dec'])
+    cat2 = fitsio.read(cat2_path, columns=['ra', 'dec'])
 else:
-    cat2, hdr2 = fits.getdata(filename2, ext=1, header=True)
+    cat2, hdr2 = fits.getdata(cat2_path, ext=1, header=True)
 
 ra1 = np.array(cat1['ra'])
 dec1 = np.array(cat1['dec'])
 # Case sensitive if fitsio is used
 ra2 = np.array(cat2['ra'])
 dec2 = np.array(cat2['dec'])
+
+# Remove cat1 objects outside the cat2 square
+if region_q:
+    ra2max = ra2.max()
+    ra2min = ra2.min()
+    dec2max = dec2.max()
+    dec2min = dec2.min()
+    if (ra2min-ra2max)%360<1.:  # If the cat2 region crosses with RA=0
+        print('Warning: cat2 crosses with RA=0')
+        ra2min = (((ra2+180)%360.).min()-180)%360.
+        ra2max = (((ra2+180)%360.).max()-180+360)%360.
+        mask = (ra1>ra2min/60.) & (ra1<ra2max+1/60.) & (dec1<dec2max+1/360.) & (dec1>dec2min-1/360.)
+    else:  # normal case
+        mask = (ra1<ra2max+1/60.) & (ra1>ra2min-1/60.) & (dec1<dec2max+1/360.) & (dec1>dec2min-1/360.)
+    cat1 = cat1[mask]
+    ra1 = ra1[mask]
+    dec1 = dec1[mask]
 
 # Matching catalogs
 if verbose:
@@ -76,8 +93,8 @@ if correct_offset_q:
     ra1 = ra1 + ra_offset
     dec1 = dec1 + dec_offset
     if verbose:
-        print('RA  offset = %s arcsec'%(ra_offset*3600))
-        print('Dec offset = %s arcsec'%(dec_offset*3600))
+        print('RA  offset = %f arcsec'%(ra_offset*3600))
+        print('Dec offset = %f arcsec'%(dec_offset*3600))
     skycat1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
     idx, d2d, _ = skycat2.match_to_catalog_sky(skycat1)
     mask2 = d2d<(search_radius*u.arcsec)
@@ -153,7 +170,8 @@ for index in range(len(cat1.columns)):
     else:
         cat1[colname][notmask2] = 0
 
-fits.writeto(output_filename, cat1, hdr1)
+if save_q:
+    fits.writeto(output_path, cat1, hdr1)
 
 # -----------------------------------------------------------------------------------------
 
