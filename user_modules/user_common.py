@@ -32,7 +32,7 @@ def hlmean(data,nsamp=-1):
 
     OPTIONAL KEYWORD PARAMETERS:
 
-     nsamp= : if set, hlmean will use this number of bootstrap
+     nsamp : if set, hlmean will use this number of bootstrap
      samples to do the calculation.  If not set, it will use 200*the
      number of elements of the data array random values of i&j.
 
