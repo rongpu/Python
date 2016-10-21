@@ -60,23 +60,6 @@ dec2 = np.array(cat2['dec'])
 
 if region_q:
 
-    # Remove cat1 objects outside the cat2 square
-    ra2max = ra2.max()
-    ra2min = ra2.min()
-    dec2max = dec2.max()
-    dec2min = dec2.min()
-    if (ra2min-ra2max)%360<1.:  # If the cat2 region crosses with RA=0
-        print('Warning: cat2 crosses with RA=0')
-        ra2min = (((ra2+180)%360.).min()-180)%360.
-        ra2max = (((ra2+180)%360.).max()-180+360)%360.
-        mask = (ra1>ra2min-1/60.) & (ra1<ra2max+1/60.) & (dec1<dec2max+1/360.) & (dec1>dec2min-1/360.)
-    else:  # otherwise
-        mask = (ra1<ra2max+1/60.) & (ra1>ra2min-1/60.) & (dec1<dec2max+1/360.) & (dec1>dec2min-1/360.)
-    cat1 = cat1[mask]
-    ra1 = ra1[mask]
-    dec1 = dec1[mask]
-    print('%d objects removed from cat1'%(np.sum(~mask)))
-
     # Remove cat2 objects outside the cat1 square
     ra1max = ra1.max()
     ra1min = ra1.min()
@@ -89,13 +72,36 @@ if region_q:
         mask = (ra2<ra1max+1/60.) & (ra2>ra1min-1/60.) & (dec2<dec1max+1/360.) & (dec2>dec1min-1/360.)
     else:  # otherwise
         mask = (ra2<ra1max+1/60.) & (ra2>ra1min-1/60.) & (dec2<dec1max+1/360.) & (dec2>dec1min-1/360.)
+    if np.sum(mask)==0:
+        print('0 match!')
+        sys.exit()
     # bar keeps track of cat2 original index
     bar = np.arange(len(cat2))
     # effectively reduction of cat2
     ra2 = ra2[mask]
     dec2 = dec2[mask]
     bar = bar[mask]
-    print('%d objects removed from cat2'%(np.sum(~mask)))
+    print('%d out of %d objects removed from cat2'%(np.sum(~mask), len(mask)))
+
+    # Remove cat1 objects outside the cat2 square
+    ra2max = ra2.max()
+    ra2min = ra2.min()
+    dec2max = dec2.max()
+    dec2min = dec2.min()
+    if (ra2min-ra2max)%360<1.:  # If the cat2 region crosses with RA=0
+        print('Warning: cat2 crosses with RA=0')
+        ra2min = (((ra2+180)%360.).min()-180)%360.
+        ra2max = (((ra2+180)%360.).max()-180+360)%360.
+        mask = (ra1>ra2min-1/60.) & (ra1<ra2max+1/60.) & (dec1<dec2max+1/360.) & (dec1>dec2min-1/360.)
+    else:  # otherwise
+        mask = (ra1<ra2max+1/60.) & (ra1>ra2min-1/60.) & (dec1<dec2max+1/360.) & (dec1>dec2min-1/360.)
+    if np.sum(mask)==0:
+        print('0 match!')
+        sys.exit()
+    cat1 = cat1[mask]
+    ra1 = ra1[mask]
+    dec1 = dec1[mask]
+    print('%d out of %d objects removed from cat1'%(np.sum(~mask), len(mask)))
 
 # Matching catalogs
 print("Matching...")
@@ -206,7 +212,7 @@ for index in range(len(cat1.columns)):
         cat1[colname][notmask2full] = 0
 
 if save_q:
-    fits.writeto(output_path, cat1, hdr1)
+    fits.writeto(output_path, cat1, hdr1, clobber=True)
 
 # -----------------------------------------------------------------------------------------
 
