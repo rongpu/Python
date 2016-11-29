@@ -139,6 +139,36 @@ def poly_val1d(x, m):
 
 # ---------------------------------------------------
 
+def rlm_fit1d_more(x, y, t=1.5, order=1):
+    '''
+    Same as rlm_fit1d_more, except that instead of only returning the 
+    fitting parameters, the full regression result is return. 
+    '''
+    
+    ncols = order+1
+    a = np.zeros((x.size,ncols))
+    for i in range(order+1):
+        a[:,i] = x**i
+    res = sm.RLM(y, a, M=sm.robust.norms.HuberT(t=t)).fit()
+    return(res)
+
+# ---------------------------------------------------
+
+def poly_val1d_more(x, res):
+    '''
+    Same as rlm_fit1d_more, except that instead of only taking the 
+    fitting parameters as argument, the full regression result taken. 
+    '''
+    
+    m = res.params
+    order = len(m)-1
+    z = np.zeros_like(x)
+    for i in range(order+1):
+        z += m[i] * x**i
+    return z
+
+# ---------------------------------------------------
+
 def rlm_fit2d(x, y, z, t=1.5, order=2):
     '''
     2D robust polynomial fit.

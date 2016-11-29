@@ -41,21 +41,26 @@ cat1_path = '/Users/roz18/Documents/Data/LSST_photo-z_testbed/Cross-identificati
 cat2_path = '/Users/roz18/Documents/Data/LSST_photo-z_testbed/Cross-identification/alldeep.egs.uniq.2012jun13.fits'
 output_path = '/Users/roz18/whatever.fits'
 
+ra_name1 = 'ra'
+dec_name1 = 'dec'
+ra_name2 = 'ra'
+dec_name2 = 'dec'
+
 #---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---#---
 
 print("Loading data...")
 cat1, hdr1 = fits.getdata(cat1_path, ext=1, header=True)
 if fitsio_q:
     # Not case sensitive here
-    cat2 = fitsio.read(cat2_path, columns=['ra', 'dec'])
+    cat2 = fitsio.read(cat2_path, columns=[ra_name2, dec_name_2])
 else:
     cat2, hdr2 = fits.getdata(cat2_path, ext=1, header=True)
 
-ra1 = np.array(cat1['ra'])
-dec1 = np.array(cat1['dec'])
+ra1 = np.array(cat1[ra_name1])
+dec1 = np.array(cat1[dec_name1])
 # Case sensitive if fitsio is used
-ra2 = np.array(cat2['ra'])
-dec2 = np.array(cat2['dec'])
+ra2 = np.array(cat2[ra_name2])
+dec2 = np.array(cat2[dec_name2])
 
 
 if region_q:
@@ -218,8 +223,8 @@ if save_q:
 
 if plot_q:
 
-    d_ra_hist=(cat2['ra'][mask2full]-cat1['ra'][mask2full])*3600    # in arcsec
-    d_dec_hist=(cat2['dec'][mask2full]-cat1['dec'][mask2full])*3600 # in arcsec
+    d_ra_hist=(cat2[ra_name2][mask2full]-cat1[ra_name1][mask2full])*3600    # in arcsec
+    d_dec_hist=(cat2[dec_name2][mask2full]-cat1[dec_name1][mask2full])*3600 # in arcsec
 
     ax = scatter_plot(d_ra_hist, d_dec_hist)
     ax.plot(ra_offset*3600, dec_offset*3600, 'r.', markersize=9)
