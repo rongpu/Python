@@ -156,7 +156,7 @@ def rlm_fit1d_more(x, y, t=1.5, order=1):
 
 def poly_val1d_more(x, res):
     '''
-    Same as rlm_fit1d_more, except that instead of only taking the 
+    Same as poly_val1d, except that instead of only taking the 
     fitting parameters as argument, the full regression result taken. 
     '''
     
