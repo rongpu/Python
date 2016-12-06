@@ -402,7 +402,7 @@ def readRFBinary(file='OUTPUT/test.153-155.coeff'):
     
 def readEazyBinary(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_FILE='Same'):
     """
-tempfilt, coeffs, temp_sed, pz = readEazyBinary(MAIN_OUTPUT_FILE='photz', \
+    tempfilt, coeffs, temp_sed, pz = readEazyBinary(MAIN_OUTPUT_FILE='photz', \
                                                 OUTPUT_DIRECTORY='./OUTPUT', \
                                                 CACHE_FILE = 'Same')
 
@@ -520,7 +520,7 @@ tempfilt, coeffs, temp_sed, pz = readEazyBinary(MAIN_OUTPUT_FILE='photz', \
         
 def getEazySED(idx, MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_FILE='Same', scale_flambda=True, verbose=False, individual_templates=False):
     """
-lambdaz, temp_sed, lci, obs_sed, fobs, efobs = \
+    lambdaz, temp_sed, lci, obs_sed, fobs, efobs = \
      getEazySED(idx, MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_FILE='Same')
     
     Get best-fit Eazy template for object number 'idx' from the specified Eazy output files. 
@@ -626,7 +626,7 @@ def getAllPz(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_FILE='
             
 def getEazyPz(idx, MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_FILE='Same', binaries=None, get_prior=False):
     """
-zgrid, pz = getEazyPz(idx, \
+    zgrid, pz = getEazyPz(idx, \
                       MAIN_OUTPUT_FILE='photz', \
                       OUTPUT_DIRECTORY='./OUTPUT', \
                       CACHE_FILE='Same', binaries=None)
@@ -662,7 +662,7 @@ zgrid, pz = getEazyPz(idx, \
     
     ###### Done
     if get_prior:
-        return tempfilt['zgrid'], pzi, p
+        return tempfilt['zgrid'], pzi, prior
     else:
         return tempfilt['zgrid'], pzi
         
@@ -975,8 +975,8 @@ PlotSEDExample(idx=20)
     ax.errorbar(lci[~highsn], fobs[~highsn], yerr=efobs[~highsn], ecolor='0.7',
                color='black',fmt='o',alpha=alph, markeredgecolor='0.7', markerfacecolor='None', markeredgewidth=1.5, ms=8, zorder=1)
     
-    for i in range(len(lci)):
-        print '%f %e %e %e' %(lci[i], obs_sed[i], fobs[i], efobs[i])
+    # for i in range(len(lci)):
+    #     print '%f %e %e %e' %(lci[i], obs_sed[i], fobs[i], efobs[i])
         
     #### Set axis range and titles
     ax.semilogx()
@@ -1013,7 +1013,7 @@ PlotSEDExample(idx=20)
 
 def nMAD(arr):
     """
-result = nMAD(arr)
+    result = nMAD(arr)
 
     Get the NMAD statistic of the input array, where
     NMAD = 1.48 * median(ABS(arr) - median(arr)).
@@ -1042,11 +1042,10 @@ def _add_ticks():
     ystep= ystep[1]-ystep[0]
     ax.yaxis.set_minor_locator(ticker.MultipleLocator(ystep/2.))
 
-def zPhot_zSpec(zoutFile='../COSMOS/OUTPUT/cat3.4_default_lines_zp33sspNoU.zout', \
-                zmax=4, marker='o', color='black', alpha=0.2, ticks=None):
+def zPhot_zSpec(zoutFile='../COSMOS/OUTPUT/cat3.4_default_lines_zp33sspNoU.zout', zmax=4, marker='o', color='black', alpha=0.2, ticks=None):
     """
-zPhot_zSpec(zoutfile="./OUTPUT/photz.zout', zmax=4)
-
+    zPhot_zSpec(zoutfile="./OUTPUT/photz.zout', zmax=4)
+    
     Make a nice zphot-zspec plot for an Eazy output file.
     """
     #zout = '../COSMOS/OUTPUT/cat3.4_default_lines_zp33sspNoU.zout'
@@ -2451,24 +2450,4 @@ def getEazySED_new(idx, MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', C
     
     zi = tempfilt['zgrid'][coeffs['izbest'][idx]]
     
-    # ###### Full template SED, observed frame
-    # lambdaz = temp_seds['templam']*(1+zi)
-    # temp_sed = np.dot(temp_seds['temp_seds'],coeffs['coeffs'][:,idx])
-    # if individual_templates:
-    #     temp_sed = temp_seds['temp_seds']*coeffs['coeffs'][:,idx]
-    
-    # temp_sed /= (1+zi)**2
-    
-    # temp_sed *= (1/5500.)**2*flam_factor
-    
-    # ###### IGM absorption
-    # lim1 = np.where(temp_seds['templam'] < 912)
-    # lim2 = np.where((temp_seds['templam'] >= 912) & (temp_seds['templam'] < 1026))
-    # lim3 = np.where((temp_seds['templam'] >= 1026) & (temp_seds['templam'] < 1216))
-    
-    # if lim1[0].size > 0: temp_sed[lim1] *= 0.
-    # if lim2[0].size > 0: temp_sed[lim2] *= 1.-temp_seds['db'][coeffs['izbest'][idx]]
-    # if lim3[0].size > 0: temp_sed[lim3] *= 1.-temp_seds['da'][coeffs['izbest'][idx]]
-        
-    ###### Done
     return lci, obs_sed, fobs, efobs
