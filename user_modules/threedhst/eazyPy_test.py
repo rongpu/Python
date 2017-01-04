@@ -480,6 +480,8 @@ def readEazyBinary(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_
               
     ###### .pz
     if os.path.exists(root+'.pz'):
+
+        print('Path exists!!')
         f = open(root+'.pz','rb')
         s = np.fromfile(file=f,dtype=np.int32, count=2)
         NZ=s[0]
@@ -488,19 +490,23 @@ def readEazyBinary(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_
 
         ### This will break if APPLY_PRIOR No
         s = np.fromfile(file=f,dtype=np.int32, count=1)
+        print(f)
         
         if len(s) > 0:
+            print('Lenght is non-zero')
             NK = s[0]
             kbins = np.fromfile(file=f,dtype=np.double,count=NK)
             priorzk = np.fromfile(file=f, dtype=np.double, count=NZ*NK).reshape((NK,NZ)).transpose()
             kidx = np.fromfile(file=f,dtype=np.int32,count=NOBJ)
             pz = {'NZ':NZ,'NOBJ':NOBJ,'NK':NK, 'chi2fit':chi2fit, 'kbins':kbins, 'priorzk':priorzk,'kidx':kidx}
         else:
+            print('Lenght is zero')
             pz = None
         
         f.close()
         
     else:
+        print('Path does not exist!!')
         pz = None
     
     if False:
@@ -917,6 +923,10 @@ PlotSEDExample(idx=20)
     zgrid, pz = getEazyPz(qz[idx], MAIN_OUTPUT_FILE=MAIN_OUTPUT_FILE, \
                                    OUTPUT_DIRECTORY=OUTPUT_DIRECTORY, \
                                    CACHE_FILE = CACHE_FILE)
+
+    if pz is None:
+        print('None!!!')
+
     ##### plot defaults
     #rc('font',**{'family':'serif','serif':['Times']})
     plt.rcParams['font.family'] = 'sans-serif'
