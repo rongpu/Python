@@ -47,7 +47,7 @@ else:
 
 print('Number of initial matches = %d' %np.sum(matchlist))
 
-#------------------------------removing doubly matched points------------------------------
+#------------------------------removing doubly matched objects------------------------------
 
 if keep_cat2_q==False:
 

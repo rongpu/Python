@@ -141,11 +141,11 @@ if correct_offset_q:
 notmask2 = ~mask2
 idx[notmask2] = -99
 
-#------------------------------removing doubly matched points------------------------------
+#------------------------------removing doubly matched objects------------------------------
 
 # foo keeps track of cat2 (reduced) index for idx and d2d
 foo = np.arange(len(cat2))
-# Sort by idx to find duplicates
+# Sort by idx to find doubly matched objects
 sort_index = idx.argsort()
 idx.sort()
 d2d = d2d[sort_index]
@@ -153,7 +153,7 @@ foo = foo[sort_index]
 
 # Find the first non-zero idx
 i = np.argmax(idx>=0)
-# Find duplicates, keep only the nearest match
+# Find doubly matched objects, keep only the nearest match
 while i<=len(idx)-2:
     if idx[i]>=0 and idx[i]==idx[i+1]:
         end = i+1
@@ -168,7 +168,7 @@ while i<=len(idx)-2:
         i = i+1
 count2 = np.sum(idx>=0)
 
-print('Number of duplicates = %d'%(count1 - count2))
+print('Number of doubly matched objects = %d'%(count1 - count2))
 print('Number of final matches = %d'%count2)
 
 # Restore idx and d2d to original order
