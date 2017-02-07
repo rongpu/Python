@@ -94,10 +94,11 @@ def readpz(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', APPLY_PRIOR=Tr
                 raise ValueError('Prior data not found.')
 
     ###### Convert Chi2 to p(z)
+    # [:, None] extends 1D array to 2D
+    chi2min = np.ones_like(chi2fit)*np.min(chi2fit, axis=1)[:, None]
     if APPLY_PRIOR:
-        # [:, None] extends 1D array to 2D
-        chi2min = np.ones_like(chi2fit)*np.min(chi2fit, axis=1)[:, None]
-        # prior for each object
+        # prior array for each object
+        # kidx==0 for brightest objects and objects with failed photo-z measurements
         prior = priorkz[kidx]
         pz = np.exp(-0.5*(chi2fit-chi2min))*prior
     else:
