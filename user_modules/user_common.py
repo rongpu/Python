@@ -3,7 +3,7 @@ import numpy as np
 import statsmodels.api as sm
 from scipy.interpolate import interp1d
 
-def hlmean(data,nsamp=-1):
+def hlmean(data, multiplier=None):
     '''
     PURPOSE:
 
@@ -32,7 +32,7 @@ def hlmean(data,nsamp=-1):
 
     OPTIONAL KEYWORD PARAMETERS:
 
-     nsamp : if set, hlmean will use this number of bootstrap
+     multiplier : if set, hlmean will use this number of bootstrap
      samples to do the calculation.  If not set, it will use 200*the
      number of elements of the data array random values of i&j.
 
@@ -45,22 +45,24 @@ def hlmean(data,nsamp=-1):
        print hlmean(test)
     '''
 
-    ndata=len(data)
+    ndata = len(data)
     if ndata==0:
         print('H-L mean: empty array!!!')
     if ndata < 200:
-        pairmean=np.zeros(int(ndata*(ndata+1)/2))
-        index=0
+        pairmean = np.zeros(int(ndata*(ndata+1)/2))
+        index = 0
         for i in range(ndata):
             for j in range(i,ndata):
-                pairmean[index]=(data[i]+data[j])/2
-                index+=1
+                pairmean[index] = (data[i]+data[j])/2
+                index += 1
     else:
-        if nsamp < 0:
-            nsamp=200*ndata
-        idx=np.floor(np.random.rand(nsamp,2)*ndata)
-        idx=idx.astype(np.int64,copy=False)
-        pairmean=np.sum(data[idx],axis=1)/2.
+        if multiplier==None:
+            nsamp = 200 * ndata
+        else:
+            nsamp = multiplier * ndata
+        idx = np.floor(np.random.rand(nsamp,2)*ndata)
+        idx = idx.astype(np.int64,copy=False)
+        pairmean = np.sum(data[idx],axis=1)/2.
     return(np.median(pairmean))
 
 # ---------------------------------------------------
