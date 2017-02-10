@@ -3,11 +3,8 @@ import numpy as np
 
 def readtempfilt(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT'):
     """
-    Read Eazy p(z) from BINARY_OUTPUTS files.
-
-    Outputs
-    -------
-    tempfilt
+    Read redshift grid, filter, template and flux information from the .templfilt 
+    binary file.
         
     """
 
@@ -44,18 +41,20 @@ def readtempfilt(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT'):
 
 def readpz(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', APPLY_PRIOR=True):
     """
+    Get Eazy p(z), prior and chi2 from binary data. 
+
     Inputs
     ------
-    get_prior: if True, the prior will be applied;
-    get_chi2: if True, returns chi2;
+    APPLY_PRIOR: if True, the prior will be included in the output and it will be applied 
+    on p(z);
 
     Outputs
     -------
-    pz_dict: dictionary of zgrid, p(z), prior(optional) and chi2
-        zgrid
-        p(z): matrix (idx, zgrid) of the probability distribution with or without a prior
-
-    Get Eazy p(z) from binary data. 
+    pz_dict: dictionary of
+        zgrid: redshift grid
+        pz: 2d array (idx, zgrid) of the probability distribution
+        prior: 2d array (idx, zgrid) of the prior
+        chi2: 2d array (idx, zgrid) of chi2
     
     """
 
@@ -75,10 +74,9 @@ def readpz(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', APPLY_PRIOR=Tr
         NZ=s[0]     # number points on the redshift grid
         NOBJ=s[1]   # number of objects
         # (object, redshift) Chi2 of the fit at each redshift
-        chi2fit = np.fromfile(file=f,dtype=np.double,count=NZ*NOBJ).reshape((NOBJ,NZ))
+        chi2 = np.fromfile(file=f,dtype=np.double,count=NZ*NOBJ).reshape((NOBJ,NZ))
 
         if APPLY_PRIOR:
-            ##################### This will break if APPLY_PRIOR No #####################
             # prior information
             s = np.fromfile(file=f,dtype=np.int32, count=1)
             # load prior data
@@ -95,14 +93,14 @@ def readpz(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', APPLY_PRIOR=Tr
 
     ###### Convert Chi2 to p(z)
     # [:, None] extends 1D array to 2D
-    chi2min = np.ones_like(chi2fit)*np.min(chi2fit, axis=1)[:, None]
+    chi2min = np.ones_like(chi2)*np.min(chi2, axis=1)[:, None]
     if APPLY_PRIOR:
         # prior array for each object
         # kidx==0 for brightest objects and objects with failed photo-z measurements
         prior = priorkz[kidx]
-        pz = np.exp(-0.5*(chi2fit-chi2min))*prior
+        pz = np.exp(-0.5*(chi2-chi2min))*prior
     else:
-        pz = np.exp(-0.5*(chi2fit-chi2min))
+        pz = np.exp(-0.5*(chi2-chi2min))
 
     norm = np.trapz(pz, zgrid)[:, None]
     if np.all(norm > 0):
@@ -112,7 +110,7 @@ def readpz(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', APPLY_PRIOR=Tr
 
     ###### Done
     if APPLY_PRIOR:
-        pz_dict = {'zgrid':zgrid, 'pz':pz, 'prior':prior, 'chi2':chi2fit}
+        pz_dict = {'zgrid':zgrid, 'pz':pz, 'prior':prior, 'chi2':chi2}
     else:
-        pz_dict = {'zgrid':zgrid, 'pz':pz, 'chi2':chi2fit}
+        pz_dict = {'zgrid':zgrid, 'pz':pz, 'chi2':chi2}
     return pz_dict
