@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 from astropy.table import Table, Column
 import numpy as np
 
