@@ -480,8 +480,6 @@ def readEazyBinary(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_
               
     ###### .pz
     if os.path.exists(root+'.pz'):
-
-        print('Path exists!!')
         f = open(root+'.pz','rb')
         s = np.fromfile(file=f,dtype=np.int32, count=2)
         NZ=s[0]
@@ -490,23 +488,19 @@ def readEazyBinary(MAIN_OUTPUT_FILE='photz', OUTPUT_DIRECTORY='./OUTPUT', CACHE_
 
         ### This will break if APPLY_PRIOR No
         s = np.fromfile(file=f,dtype=np.int32, count=1)
-        print(f)
         
         if len(s) > 0:
-            print('Lenght is non-zero')
             NK = s[0]
             kbins = np.fromfile(file=f,dtype=np.double,count=NK)
             priorzk = np.fromfile(file=f, dtype=np.double, count=NZ*NK).reshape((NK,NZ)).transpose()
             kidx = np.fromfile(file=f,dtype=np.int32,count=NOBJ)
             pz = {'NZ':NZ,'NOBJ':NOBJ,'NK':NK, 'chi2fit':chi2fit, 'kbins':kbins, 'priorzk':priorzk,'kidx':kidx}
         else:
-            print('Lenght is zero')
             pz = None
         
         f.close()
         
     else:
-        print('Path does not exist!!')
         pz = None
     
     if False:
@@ -904,7 +898,7 @@ def convert_chi_to_pdf(tempfilt, pz):
     
 def plotExampleSED(idx=20, writePNG=True, MAIN_OUTPUT_FILE = 'photz', OUTPUT_DIRECTORY = 'OUTPUT', CACHE_FILE = 'Same', lrange=[3000,8.e4], axes=None, individual_templates=False, fnu=False):
     """
-PlotSEDExample(idx=20)
+    PlotSEDExample(idx=20)
 
     Plot an example Eazy best-fit SED.
     """
@@ -924,24 +918,8 @@ PlotSEDExample(idx=20)
                                    OUTPUT_DIRECTORY=OUTPUT_DIRECTORY, \
                                    CACHE_FILE = CACHE_FILE)
 
-    if pz is None:
-        print('None!!!')
-
-    ##### plot defaults
-    #rc('font',**{'family':'serif','serif':['Times']})
-    plt.rcParams['font.family'] = 'sans-serif'
-    plt.rcParams['font.serif'] = ['Helvetica']
-    #plt.rcParams['ps.useafm'] = True
-    plt.rcParams['patch.linewidth'] = 0.
-    plt.rcParams['patch.edgecolor'] = 'black'
-    #plt.rcParams['text.usetex'] = True
-    plt.rcParams['text.usetex'] = False
-    #plt.rcParams['text.latex.preamble'] = ''
-
     ##### start plot
-    if axes is None:
-        fig = plt.figure(figsize=[8,4],dpi=100)
-        fig.subplots_adjust(wspace=0.18, hspace=0.0,left=0.09,bottom=0.15,right=0.98,top=0.98)
+    fig = plt.figure()
     
     #### Plot parameters
     plotsize=35
@@ -954,46 +932,8 @@ PlotSEDExample(idx=20)
         obs_sed *= (lci/5500.)**2
 
     #### Full best-fit template
-    if axes is None:
-        ax = fig.add_subplot(121)
-        axp = fig.add_subplot(122)
-    else:
-        ax = axes[0]
-        axp = axes[1]
-        
-    if individual_templates:
-        ax.plot(lambdaz, temp_sed, linewidth=1.0, color='blue',alpha=0.4)
-        ax.plot(lambdaz, temp_sed.sum(axis=1), linewidth=1.0, color='blue',alpha=alph)
-    else:
-        ax.plot(lambdaz, temp_sed, linewidth=1.5, color='blue',alpha=alph*0.8, zorder=-3)
-    
-    #### template fluxes integrated through the filters
-    ax.scatter(lci, obs_sed,
-               c='red',marker='o',s=plotsize,alpha=alph, zorder=-1)
+    axp = fig.add_subplot(111)
 
-    #### Observed fluxes w/ errors
-    #ax.errorbar(lci,fobs,yerr=efobs,ecolor=None,
-    #           color='black',fmt='o',alpha=alph)
-    #
-    # ax.errorbar(lci, fobs, yerr=efobs, ecolor='black',
-    #            color='black',fmt='o',alpha=alph, markeredgecolor='black', markerfacecolor='None', markeredgewidth=1.5, ms=8, zorder=1)
-
-    highsn = fobs/efobs > 2
-    ax.errorbar(lci[highsn], fobs[highsn], yerr=efobs[highsn], ecolor='black',
-               color='black',fmt='o',alpha=alph, markeredgecolor='black', markerfacecolor='None', markeredgewidth=1.5, ms=8, zorder=2)
-    #
-    ax.errorbar(lci[~highsn], fobs[~highsn], yerr=efobs[~highsn], ecolor='0.7',
-               color='black',fmt='o',alpha=alph, markeredgecolor='0.7', markerfacecolor='None', markeredgewidth=1.5, ms=8, zorder=1)
-    
-    # for i in range(len(lci)):
-    #     print '%f %e %e %e' %(lci[i], obs_sed[i], fobs[i], efobs[i])
-        
-    #### Set axis range and titles
-    ax.semilogx()
-    ax.set_xlim(lrange[0],lrange[1])
-    ax.set_ylim(np.min([0, min(fobs)]),1.1*max(fobs))
-    ax.set_xlabel(r'$\lambda$ [$\AA$]')
-    ax.set_ylabel(r'$f_\lambda$')
     
     ##### P(z)
     if pz is not None:            
@@ -1003,11 +943,11 @@ PlotSEDExample(idx=20)
         if zout.z_spec[qz[idx]] > 0:
             axp.plot(zout.z_spec[qz[idx]]*np.ones(2), np.array([0,1e6]),color='red',alpha=0.4)
 
-        #### Set axis range and titles
+        # #### Set axis range and titles
         axp.set_xlim(0,np.ceil(np.max(zgrid)))
         axp.set_ylim(0,1.1*max(pz))
-        axp.set_xlabel(r'$z$')
-        axp.set_ylabel(r'$p(z)$')
+        # axp.set_xlabel(r'$z$')
+        # axp.set_ylabel(r'$p(z)$')
         
     if (writePNG is not False) & (axes is None):
         if isinstance(writePNG, str):
@@ -1017,8 +957,8 @@ PlotSEDExample(idx=20)
             
         fig.savefig(out,dpi=100)
 
-    if axes is None:
-        return [ax, axp]
+    return axp
+
     
 
 def nMAD(arr):
