@@ -7,7 +7,7 @@ from astropy.coordinates import SkyCoord
 from matplotlib.ticker import NullFormatter
 
 
-def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True):
+def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True):
     '''
     documentation here
     '''
@@ -58,8 +58,9 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
 
     t2.sort('foo')
 
-    print('Doubly matched objects = %d'%(init_count-len(t2)))
-    print('Final matched objects = %d'%len(t2))
+    if verbose:
+        print('Doubly matched objects = %d'%(init_count-len(t2)))
+        print('Final matched objects = %d'%len(t2))
 
     # -----------------------------------------------------------------------------------------
 
@@ -74,9 +75,34 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     d_ra = (t2['ra']-t1['ra'])*3600    # in arcsec
     d_dec = (t2['dec']-t1['dec'])*3600 # in arcsec
 
-    scatter_plot(d_ra, d_dec)
+    if plot_q:
+        scatter_plot(d_ra, d_dec)
 
     return np.array(t1['foo']), np.array(t2['foo']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
+
+
+def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
+    '''
+    Find the n-th nearest neighbor. 
+    nthneighbor: the n-th neighbor; the nthneighbor=1 is the first neighbor other than itself. 
+    '''
+    
+    t1 = Table()
+    t1['ra'] = ra1
+    t1['dec'] = dec1
+    t1['foo'] = np.arange(len(t1))
+
+    # Matching catalogs
+    sky1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
+    idx, d2d, d3d = sky1.match_to_catalog_sky(sky1, nthneighbor=(nthneighbor+1))
+    # This find a match for each object in t2. Not all objects in t1 catalog is included in the result. 
+    
+    matchlist = d2d<(search_radius*u.arcsec)
+    t1['idx'] = idx
+    t1['d2d'] = d2d
+    t1 = t1[matchlist]
+    
+    return np.array(t1['foo']), np.array(t1['idx']), np.array(t1['d2d'])
 
 
 def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}(arcsec)}$', y_label='$\\mathbf{dec_{cat2} - dec_{cat1}(arcsec)}$'):
