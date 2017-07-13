@@ -11,7 +11,10 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     '''
     Inputs: RA and Dec of two catalogs;
 
-    Outputs: indices of matched objects in the two catalogs and the differences (in arcsec) in RA and Dec
+    Outputs: 
+        indices of matched objects in the two catalogs;
+        distances;
+        the differences (in arcsec) in RA and Dec; 
     '''
     
     t1 = Table()
