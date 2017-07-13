@@ -176,4 +176,4 @@ def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}
     # plt.xlabel('Dec_cat2 - Dec_cat1 (arcsec)')
     # plt.grid()
 
-    # plt.show()
+    plt.show()
