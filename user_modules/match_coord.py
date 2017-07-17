@@ -177,3 +177,26 @@ def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}
     # plt.grid()
 
     plt.show()
+
+
+def match_self(ra, dec, search_radius=1., return_index=False):
+    '''
+    Find objects that has a neighbor within search_radius arcsec. 
+
+    Return: 
+    Number of such objects. 
+    (Optional) Indices of such objects. 
+    '''
+
+    ra = np.array(ra)
+    dec = np.array(dec)
+    skycat = SkyCoord(ra*u.degree,dec*u.degree, frame='icrs')
+    idx, d2d, _ = skycat.match_to_catalog_sky(skycat, nthneighbor=2)
+
+    mask = d2d<(search_radius*u.arcsec)
+
+    if return_index:
+        idx_dup = np.arange(len(ra))[mask]
+        return np.sum(mask), idx_dup
+    else:
+        return np.sum(mask)
