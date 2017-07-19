@@ -179,13 +179,13 @@ def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}
     plt.show()
 
 
-def match_self(ra, dec, search_radius=1., return_index=False):
+def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
     '''
     Find objects that has a neighbor within search_radius arcsec. 
 
     Return: 
-    Number of such objects. 
-    (Optional) Indices of such objects. 
+    Number of suspected duplicates. 
+    (Optional) idx1, idx2: arrays of indices of suspected duplicates. 
     '''
 
     ra = np.array(ra)
@@ -194,9 +194,17 @@ def match_self(ra, dec, search_radius=1., return_index=False):
     idx, d2d, _ = skycat.match_to_catalog_sky(skycat, nthneighbor=2)
 
     mask = d2d<(search_radius*u.arcsec)
+    n_duplicates = np.sum(mask)
+    idx1 = np.arange(len(ra))[mask]
+    idx2 = idx[mask]
 
-    if return_index:
+    if plot_q and (n_duplicates!=0):
+        d_ra = ra[idx1] - ra[idx2]
+        d_dec = dec[idx1] - dec[idx2]
+        scatter_plot(d_ra*3600., d_dec*3600.)
+
+    if return_indices:
         idx_dup = np.arange(len(ra))[mask]
-        return np.sum(mask), idx_dup
+        return np.sum(mask), idx1, idx2
     else:
         return np.sum(mask)
