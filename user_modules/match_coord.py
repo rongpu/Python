@@ -69,7 +69,7 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
 
     # -----------------------------------------------------------------------------------------
 
-    # This part generates a cat1 catalog that matches the cat2 by index.
+    # This rearranges t1 to match t2 by index.
     t1['matchid'] = -99
     for i in np.arange(len(t2)):
         t1['matchid'][t2['idx'][i]] = t2['foo'][i]
