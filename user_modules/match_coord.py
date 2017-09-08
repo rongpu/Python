@@ -20,6 +20,9 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     t1 = Table()
     t2 = Table()
     
+    # protect the global variables from being changed by np.sort
+    ra1, dec1, ra2, dec2 = map(np.copy, [ra1, dec1, ra2, dec2])
+
     t1['ra'] = ra1
     t2['ra'] = ra2
     t1['dec'] = dec1
