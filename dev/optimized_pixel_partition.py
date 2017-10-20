@@ -1,5 +1,13 @@
 from __future__ import division, print_function
 import numpy as np
+import math
+
+def faster_std(a):
+    '''
+    3x times faster than np.std
+    '''
+    m = a.mean()
+    return math.sqrt((np.dot(a, a)/a.size) - m**2)
 
 class Subsampler():
 
@@ -10,6 +18,10 @@ class Subsampler():
         self.mutate_rate = kwargs['mutate_rate']
         self.equality_weight = kwargs['equality_weight']
         self.tournament_k = kwargs['tournament_k']
+        if 'spherical' in kwargs:
+            self.spherical = kwargs['spherical']
+        else:
+            self.spherical = True
         self.npix = len(x)
         self.x, self.y = x, y
         self.neighbors = neighbors
@@ -38,17 +50,29 @@ class Subsampler():
 
         # loop through each individual (solution) in the population
         for idx_pop in range(self.pop_size):
-            labels = np.copy(self.labels_all[idx_pop])
-            if len(np.unique(labels))<self.ngroup:
-                # solutions with missing labels are giving the lowest score
+            labels = self.labels_all[idx_pop]
+            s = labels.argsort()
+            label_edges = np.where(np.ediff1d(labels[s]))[0] + 1
+
+            # solutions with missing labels are giving the lowest score:
+            if len(label_edges) < self.ngroup - 1:
                 equality[idx_pop] = -np.inf
-            else:
-                # loop through each group
-                for idx_grp in range(self.ngroup):
-                    members = np.where(labels==idx_grp)[0]
-                    counts[idx_pop, idx_grp] = np.sum(self.weights[members])
-                    compactness[idx_pop] += np.sqrt(np.std(self.x[members])**2 + np.std(self.y[members])**2)
-                equality[idx_pop] = self.equality_weight * np.std(counts[idx_pop])/(self.average_count)
+                continue
+
+            # loop through each group
+            label_edges = np.append(np.insert(label_edges, 0, 0), len(labels))
+            for idx_grp in range(self.ngroup):
+                k1 = label_edges[idx_grp]
+                k2 = label_edges[idx_grp+1]
+                members = s[k1:k2]
+                counts[idx_pop, idx_grp] = np.sum(self.weights[members])
+                if self.spherical:
+                    x_rescale = math.cos(np.mean(self.y[members])/180*np.pi)
+                else:
+                    x_rescale = 1.
+                compactness[idx_pop] += math.sqrt(x_rescale * faster_std(self.x[members])**2 \
+                    + faster_std(self.y[members])**2)
+            equality[idx_pop] = self.equality_weight * faster_std(counts[idx_pop])/(self.average_count)
 
         # total score: higher the better
         scores = -(compactness + equality)
