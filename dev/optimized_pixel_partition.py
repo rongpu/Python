@@ -39,6 +39,11 @@ class Subsampler():
         # generate a population of solutions by repeatedly copying of the labels
         self.labels_all = np.tile(labels, self.pop_size).reshape(self.pop_size, self.npix)
 
+        # if 'preserve_best' in kwargs:
+        #     self.preserve_best = kwargs['preserve_best']
+        # else:
+        #     self.preserve_best = False
+
     def fitness(self):
 
         # compactness score: lower the better
@@ -56,7 +61,8 @@ class Subsampler():
 
             # solutions with missing labels are giving the lowest score:
             if len(label_edges) < self.ngroup - 1:
-                equality[idx_pop] = -np.inf
+                equality[idx_pop] = np.inf
+                compactness[idx_pop] = np.inf
                 continue
 
             # loop through each group
@@ -92,21 +98,25 @@ class Subsampler():
         candidates = np.argsort(self.scores)[-int(self.pop_size*self.surv_rate):]
         # Tournament Selection - obtain a list of survivers with the original size
         survivers = np.zeros(self.pop_size, dtype=int)
+        scores = np.zeros(self.pop_size)
+
         for idx_pop in range(self.pop_size):
             t_candidates = np.random.choice(candidates, size=self.tournament_k, replace=False)
             # select the highest scorer
-            survivers[idx_pop] = t_candidates[np.argmax(self.scores[t_candidates])]
+            idx_winner = np.argmax(self.scores[t_candidates])
+            survivers[idx_pop] = t_candidates[idx_winner]
+            scores[idx_pop] = self.scores[t_candidates[idx_winner]]
         
-        return survivers
+        return survivers, scores
 
     def mutate(self):
         '''
         Only pixels that are bordering a different group are mutated
         '''
         for idx_pop in range(self.pop_size):
-            labels = np.copy(self.labels_all[idx_pop])
+            labels = self.labels_all[idx_pop]
 
-            # find bordering pixels (to speed up calculation)
+            # find bordering pixels
             mask1 = labels[self.neighbors] != labels[:, None]
             mask2 = self.neighbors>=0
             mask_border = np.any(mask1 & mask2, axis=1)
@@ -127,6 +137,5 @@ class Subsampler():
                 neighbors_idx = neighbors_idx[mask]
                 if len(neighbors_idx)>0:
                     labels[idx_pixel] = np.random.choice(labels[neighbors_idx])
-            self.labels_all[idx_pop] = labels
 
         pass
