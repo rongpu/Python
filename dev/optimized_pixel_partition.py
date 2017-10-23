@@ -37,7 +37,7 @@ class Subsampler():
         self.average_count = np.sum(weights)/self.ngroup
 
         # generate a population of solutions by repeatedly copying of the labels
-        self.labels_all = np.tile(labels, self.pop_size).reshape(self.pop_size, len(labels))
+        self.labels_all = np.tile(labels, self.pop_size).reshape(self.pop_size, self.npix)
 
     def fitness(self):
 
@@ -60,7 +60,7 @@ class Subsampler():
                 continue
 
             # loop through each group
-            label_edges = np.append(np.insert(label_edges, 0, 0), len(labels))
+            label_edges = np.append(np.insert(label_edges, 0, 0), self.npix)
             for idx_grp in range(self.ngroup):
                 k1 = label_edges[idx_grp]
                 k2 = label_edges[idx_grp+1]
