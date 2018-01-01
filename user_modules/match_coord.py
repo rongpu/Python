@@ -182,7 +182,7 @@ def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}
     plt.show()
 
 
-def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
+def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False, verbos=True):
     '''
     Find objects that has a neighbor within search_radius arcsec. 
 
@@ -197,6 +197,7 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
     idx, d2d, _ = skycat.match_to_catalog_sky(skycat, nthneighbor=2)
 
     mask = d2d<(search_radius*u.arcsec)
+    print(np.sum(mask), "objects with a nearby neighbor")
     n_duplicates = np.sum(mask)
     idx1 = np.arange(len(ra))[mask]
     idx2 = idx[mask]
