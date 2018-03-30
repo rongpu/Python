@@ -9,6 +9,8 @@ from matplotlib.ticker import NullFormatter
 
 def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True):
     '''
+    Match objects in (ra2, dec2) to to (ra1, dec1).
+
     Inputs: RA and Dec of two catalogs;
 
     Outputs: 
