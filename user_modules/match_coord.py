@@ -37,7 +37,7 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     sky1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
     sky2 = SkyCoord(ra2*u.degree,dec2*u.degree, frame='icrs')
     idx, d2d, d3d = sky2.match_to_catalog_sky(sky1, nthneighbor=nthneighbor)
-    # This find a match for each object in t2. Not all objects in t1 catalog is included in the result. 
+    # This finds a match for each object in t2. Not all objects in t1 catalog are included in the result. 
     
     matchlist = d2d<(search_radius*u.arcsec)
     t2['idx'] = idx
