@@ -9,7 +9,7 @@ from matplotlib.ticker import NullFormatter
 
 def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True):
     '''
-    Match objects in (ra2, dec2) to to (ra1, dec1).
+    Match objects in (ra2, dec2) to (ra1, dec1).
 
     Inputs: RA and Dec of two catalogs;
 
@@ -82,8 +82,8 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     mask_in_t2 = t1['matchid']>=0
     t1 = t1[mask_in_t2]
 
-    d_ra = (t2['ra']-t1['ra'])*3600    # in arcsec
-    d_dec = (t2['dec']-t1['dec'])*3600 # in arcsec
+    d_ra = (t2['ra']-t1['ra'])*3600.    # in arcsec
+    d_dec = (t2['dec']-t1['dec'])*3600. # in arcsec
 
     if plot_q:
         scatter_plot(d_ra, d_dec)
@@ -115,11 +115,46 @@ def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
     return np.array(t1['foo']), np.array(t1['idx']), np.array(t1['d2d'])
 
 
-def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}(arcsec)}$', y_label='$\\mathbf{dec_{cat2} - dec_{cat1}(arcsec)}$'):
+
+def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False, verbos=True):
+    '''
+    Find objects that has a neighbor within search_radius arcsec. 
+
+    Return: 
+    Number of suspected duplicates. 
+    (Optional) idx1, idx2: arrays of indices of suspected duplicates. 
+    '''
+
+    ra = np.array(ra)
+    dec = np.array(dec)
+    skycat = SkyCoord(ra*u.degree,dec*u.degree, frame='icrs')
+    idx, d2d, _ = skycat.match_to_catalog_sky(skycat, nthneighbor=2)
+
+    mask = d2d<(search_radius*u.arcsec)
+    print(np.sum(mask), "objects with a nearby neighbor")
+    n_duplicates = np.sum(mask)
+    idx1 = np.arange(len(ra))[mask]
+    idx2 = idx[mask]
+
+    if plot_q and (n_duplicates!=0):
+        d_ra = ra[idx1] - ra[idx2]
+        d_dec = dec[idx1] - dec[idx2]
+        scatter_plot(d_ra*3600., d_dec*3600.)
+
+    if return_indices:
+        idx_dup = np.arange(len(ra))[mask]
+        return np.sum(mask), idx1, idx2
+    else:
+        return np.sum(mask)
+
+
+
+def scatter_plot(d_ra, d_dec, dec=None, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}(arcsec)}$', y_label='$\\mathbf{dec_{cat2} - dec_{cat1}(arcsec)}$'):
     '''
     INPUTS:
 
      d_ra, d_dec: array of RA and Dec difference in arcsec
+     (optional): dec: if specificied, d_ra's are plotted in actual angles
     
     OUTPUTS:
 
@@ -127,6 +162,16 @@ def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}
     '''
 
     nullfmt = NullFormatter()         # no labels
+
+    # pairs that cross RA=0
+    mask = d_ra>180*3600
+    d_ra[mask] = d_ra[mask] - 360*3600
+    mask = d_ra<-180*3600
+    d_ra[mask] = d_ra[mask] + 360*3600
+
+    # Convert d_ra to actual angles if dec is specified
+    if dec is not None:
+        d_ra = d_ra * np.cos(dec/(180*3600)*np.pi)
 
     # definitions for the axes
     left, width = 0.1, 0.85
@@ -182,35 +227,3 @@ def scatter_plot(d_ra, d_dec, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}
     # plt.grid()
 
     plt.show()
-
-
-def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False, verbos=True):
-    '''
-    Find objects that has a neighbor within search_radius arcsec. 
-
-    Return: 
-    Number of suspected duplicates. 
-    (Optional) idx1, idx2: arrays of indices of suspected duplicates. 
-    '''
-
-    ra = np.array(ra)
-    dec = np.array(dec)
-    skycat = SkyCoord(ra*u.degree,dec*u.degree, frame='icrs')
-    idx, d2d, _ = skycat.match_to_catalog_sky(skycat, nthneighbor=2)
-
-    mask = d2d<(search_radius*u.arcsec)
-    print(np.sum(mask), "objects with a nearby neighbor")
-    n_duplicates = np.sum(mask)
-    idx1 = np.arange(len(ra))[mask]
-    idx2 = idx[mask]
-
-    if plot_q and (n_duplicates!=0):
-        d_ra = ra[idx1] - ra[idx2]
-        d_dec = dec[idx1] - dec[idx2]
-        scatter_plot(d_ra*3600., d_dec*3600.)
-
-    if return_indices:
-        idx_dup = np.arange(len(ra))[mask]
-        return np.sum(mask), idx1, idx2
-    else:
-        return np.sum(mask)
