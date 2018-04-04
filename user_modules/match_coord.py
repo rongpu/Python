@@ -7,11 +7,17 @@ from astropy.coordinates import SkyCoord
 from matplotlib.ticker import NullFormatter
 
 
-def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True):
+def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True,
+    keep_all_pairs=False):
     '''
-    Match objects in (ra2, dec2) to (ra1, dec1).
+    Match objects in t1=(ra2, dec2) to t2=(ra1, dec1). 
 
-    Inputs: RA and Dec of two catalogs;
+    Inputs: 
+    RA and Dec of two catalogs;
+    (Optional) keep_all_pairs: if true, then all matched pairs are kept; otherwise, if more than
+    one object in t2 is match to the same object in t1 (i.e. double match), only the closest pair
+    is kept.
+
 
     Outputs: 
         indices of matched objects in the two catalogs;
@@ -30,8 +36,8 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     t1['dec'] = dec1
     t2['dec'] = dec2
     
-    t1['foo'] = np.arange(len(t1))
-    t2['foo'] = np.arange(len(t2))
+    t1['id'] = np.arange(len(t1))
+    t2['id'] = np.arange(len(t2))
     
     # Matching catalogs
     sky1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
@@ -47,48 +53,46 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     init_count = np.sum(matchlist)
 
     #------------------------------removing doubly matched objects------------------------------
+    if not keep_all_pairs:
+    
+        t2.sort('idx')
+        i = 0
+        while i<=len(t2)-2:
+            if t2['idx'][i]>=0 and t2['idx'][i]==t2['idx'][i+1]:
+                end = i+1
+                while end+1<=len(t2)-1 and t2['idx'][i]==t2['idx'][end+1]:
+                    end = end+1
+                findmin = np.argmin(t2['d2d'][i:end+1])
+                for j in range(i,end+1):
+                    if j!=i+findmin:
+                        t2['idx'][j]=-99
+                i = end+1
+            else:
+                i = i+1
 
-    t2.sort('idx')
-    i = 0
-    while i<=len(t2)-2:
-        if t2['idx'][i]>=0 and t2['idx'][i]==t2['idx'][i+1]:
-            end = i+1
-            while end+1<=len(t2)-1 and t2['idx'][i]==t2['idx'][end+1]:
-                end = end+1
-            findmin = np.argmin(t2['d2d'][i:end+1])
-            for j in range(i,end+1):
-                if j!=i+findmin:
-                    t2['idx'][j]=-99
-            i = end+1
-        else:
-            i = i+1
+        mask_match = t2['idx']>=0
+        t2 = t2[mask_match]
 
-    mask_match = t2['idx']>=0
-    t2 = t2[mask_match]
+        t2.sort('id')
 
-    t2.sort('foo')
-
+        if verbose:
+            print('Doubly matched objects = %d'%(init_count-len(t2)))
+    
+    # -----------------------------------------------------------------------------------------
     if verbose:
-        print('Doubly matched objects = %d'%(init_count-len(t2)))
         print('Final matched objects = %d'%len(t2))
 
-    # -----------------------------------------------------------------------------------------
-
     # This rearranges t1 to match t2 by index.
-    t1['matchid'] = -99
-    for i in np.arange(len(t2)):
-        t1['matchid'][t2['idx'][i]] = t2['foo'][i]
-    t1.sort('matchid')
-    mask_in_t2 = t1['matchid']>=0
-    t1 = t1[mask_in_t2]
+    t1 = t1[t2['idx']]
 
     d_ra = (t2['ra']-t1['ra'])*3600.    # in arcsec
     d_dec = (t2['dec']-t1['dec'])*3600. # in arcsec
 
     if plot_q:
-        scatter_plot(d_ra, d_dec)
+        scatter_plot(d_ra, d_dec, markersize=1, alpha=1)
 
-    return np.array(t1['foo']), np.array(t2['foo']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
+    return np.array(t1['id']), np.array(t2['id']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
+
 
 
 def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
@@ -100,7 +104,7 @@ def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
     t1 = Table()
     t1['ra'] = ra1
     t1['dec'] = dec1
-    t1['foo'] = np.arange(len(t1))
+    t1['id'] = np.arange(len(t1))
 
     # Matching catalogs
     sky1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
@@ -112,7 +116,7 @@ def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
     t1['d2d'] = d2d
     t1 = t1[matchlist]
     
-    return np.array(t1['foo']), np.array(t1['idx']), np.array(t1['d2d'])
+    return np.array(t1['id']), np.array(t1['idx']), np.array(t1['d2d'])
 
 
 
@@ -149,12 +153,14 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False, ve
 
 
 
-def scatter_plot(d_ra, d_dec, dec=None, title='', x_label='$\\mathbf{RA_{cat2} - RA_{cat1}(arcsec)}$', y_label='$\\mathbf{dec_{cat2} - dec_{cat1}(arcsec)}$'):
+def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
+    x_label='$\\mathbf{RA_{cat2} - RA_{cat1}(arcsec)}$',
+    y_label='$\\mathbf{dec_{cat2} - dec_{cat1}(arcsec)}$'):
     '''
     INPUTS:
 
-     d_ra, d_dec: array of RA and Dec difference in arcsec
-     (optional): dec: if specificied, d_ra's are plotted in actual angles
+     d_ra, d_dec (arcsec): array of RA and Dec difference in arcsec
+     (optional) dec (deg): if specificied, d_ra's are plotted in actual angles
     
     OUTPUTS:
 
@@ -171,7 +177,7 @@ def scatter_plot(d_ra, d_dec, dec=None, title='', x_label='$\\mathbf{RA_{cat2} -
 
     # Convert d_ra to actual angles if dec is specified
     if dec is not None:
-        d_ra = d_ra * np.cos(dec/(180*3600)*np.pi)
+        d_ra = d_ra * np.cos(dec/180*np.pi)
 
     # definitions for the axes
     left, width = 0.1, 0.85
@@ -195,10 +201,10 @@ def scatter_plot(d_ra, d_dec, dec=None, title='', x_label='$\\mathbf{RA_{cat2} -
     # the scatter plot
     # mask = np.logical_and(np.abs(d_ra)<1.66, np.abs(d_dec)<1.)
     # axScatter.plot(d_ra[mask], d_dec[mask], 'k.', markersize=1)
-    axScatter.plot(d_ra, d_dec, 'k.', markersize=1)
+    axScatter.plot(d_ra, d_dec, 'k.', markersize=markersize, alpha=alpha)
 
-    axHistx.hist(d_ra, bins=100, histtype='step', color='k', linewidth=2)
-    axHisty.hist(d_dec, bins=100, histtype='step', color='k', linewidth=2, orientation='horizontal')
+    axHistx.hist(d_ra, bins=100, histtype='step', color='r', linewidth=2)
+    axHisty.hist(d_dec, bins=100, histtype='step', color='r', linewidth=2, orientation='horizontal')
 
     axHistx.set_xlim(axScatter.get_xlim())
     axHisty.set_ylim(axScatter.get_ylim())
@@ -225,5 +231,3 @@ def scatter_plot(d_ra, d_dec, dec=None, title='', x_label='$\\mathbf{RA_{cat2} -
     # plt.title('Dec difference between cat2/3 and Terapix catalog')
     # plt.xlabel('Dec_cat2 - Dec_cat1 (arcsec)')
     # plt.grid()
-
-    plt.show()
