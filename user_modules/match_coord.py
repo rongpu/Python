@@ -89,7 +89,7 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     d_dec = (t2['dec']-t1['dec'])*3600. # in arcsec
 
     if plot_q:
-        scatter_plot(d_ra, d_dec, markersize=1, alpha=1)
+        scatter_plot(d_ra, d_dec, dec=t1['dec'], markersize=1, alpha=1)
 
     return np.array(t1['id']), np.array(t2['id']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
 
@@ -154,8 +154,8 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False, ve
 
 
 def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
-    x_label='$\\mathbf{RA_{cat2} - RA_{cat1}(arcsec)}$',
-    y_label='$\\mathbf{dec_{cat2} - dec_{cat1}(arcsec)}$'):
+    x_label='$\\mathbf{RA_{cat2} - RA_{cat1} (arcsec)$',
+    y_label='$\\mathbf{dec_{cat2} - dec_{cat1} (arcsec)$'):
     '''
     INPUTS:
 
@@ -214,8 +214,8 @@ def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
 
     axScatter.axhline(0, color='r', linestyle='--', linewidth=1.2)
     axScatter.axvline(0, color='r', linestyle='--', linewidth=1.2)
-    axScatter.set_xlabel(('$RA_{cat2} - RA_{cat1}(arcsec)$'))
-    axScatter.set_ylabel(('$dec_{cat2} - dec_{cat1}(arcsec)}$'))
+    axScatter.set_xlabel(('$RA_{cat2} - RA_{cat1} (arcsec)$'))
+    axScatter.set_ylabel(('$dec_{cat2} - dec_{cat1} (arcsec)$'))
 
     return(axScatter)
     # #--------------- ra dec histogram ---------------------
