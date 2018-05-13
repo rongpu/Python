@@ -10,7 +10,7 @@ def growth_factor_at_z(z, cosmo):
 
     Inputs:
     z: redshift (single value);
-    cosmo: astropy comology objects, e.g.:
+    cosmo: astropy comology object, e.g.:
         from astropy.cosmology import Planck15 as cosmo
 
     Output:
