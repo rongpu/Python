@@ -120,7 +120,7 @@ def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
 
 
 
-def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False, verbos=True):
+def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
     '''
     Find objects that has a neighbor within search_radius arcsec. 
 
@@ -218,16 +218,3 @@ def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
     axScatter.set_ylabel(('$dec_{cat2} - dec_{cat1} (arcsec)$'))
 
     return(axScatter)
-    # #--------------- ra dec histogram ---------------------
-
-    # plt.figure()
-    # plt.hist(d_ra,bins=50)
-    # plt.title('RA difference between cat2/3 and Terapix catalog')
-    # plt.xlabel('RA_cat2 - RA_cat1 (arcsec)')
-    # plt.grid()
-
-    # plt.figure()
-    # plt.hist(d_dec,50)
-    # plt.title('Dec difference between cat2/3 and Terapix catalog')
-    # plt.xlabel('Dec_cat2 - Dec_cat1 (arcsec)')
-    # plt.grid()
