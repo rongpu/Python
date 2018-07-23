@@ -13,16 +13,17 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     Match objects in t1=(ra2, dec2) to t2=(ra1, dec1). 
 
     Inputs: 
-    RA and Dec of two catalogs;
-    (Optional) keep_all_pairs: if true, then all matched pairs are kept; otherwise, if more than
-    one object in t2 is match to the same object in t1 (i.e. double match), only the closest pair
-    is kept.
-
+        RA and Dec of two catalogs;
+        search_radius: in arcsec;
+        (Optional) keep_all_pairs: if true, then all matched pairs are kept; otherwise, if more than
+        one object in t2 is match to the same object in t1 (i.e. double match), only the closest pair
+        is kept.
 
     Outputs: 
-        indices of matched objects in the two catalogs;
-        distances (in degrees);
-        the differences (in arcsec) in RA and Dec; 
+        idx1, idx2: indices of matched objects in the two catalogs;
+        d2d: distances (in arcsec);
+        d_ra, d_dec: the differences (in arcsec) in RA and Dec; note that d_ra is the actual angular 
+        separation;
     '''
     
     t1 = Table()
@@ -45,7 +46,10 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     idx, d2d, d3d = sky2.match_to_catalog_sky(sky1, nthneighbor=nthneighbor)
     # This finds a match for each object in t2. Not all objects in t1 catalog are included in the result. 
     
-    matchlist = d2d<(search_radius*u.arcsec)
+    # convert distances to numpy array in arcsec
+    d2d = np.array(d2d.to(u.arcsec))
+
+    matchlist = d2d<search_radius
     t2['idx'] = idx
     t2['d2d'] = d2d
     t2 = t2[matchlist]
@@ -85,11 +89,20 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     # This rearranges t1 to match t2 by index.
     t1 = t1[t2['idx']]
 
-    d_ra = (t2['ra']-t1['ra'])*3600.    # in arcsec
-    d_dec = (t2['dec']-t1['dec'])*3600. # in arcsec
+    d_ra = (t2['ra']-t1['ra']) * 3600.    # in arcsec
+    d_dec = (t2['dec']-t1['dec']) * 3600. # in arcsec
+    ##### Convert d_ra to actual arcsecs #####
+    mask = d_ra > 180*3600
+    d_ra[mask] = d_ra[mask] - 360.*3600
+    mask = d_ra < -180*3600
+    d_ra[mask] = d_ra[mask] + 360.*3600
+    d_ra = d_ra * np.cos(t1['dec']/180*np.pi)
+    ##########################################
 
     if plot_q:
-        scatter_plot(d_ra, d_dec, dec=t1['dec'], markersize=1, alpha=1)
+        markersize = np.max([0.01, np.min([10, 0.3*100000/len(d_ra)])])    
+        axis = [-search_radius*1.05, search_radius*1.05, -search_radius*1.05, search_radius*1.05]
+        scatter_plot(d_ra, d_dec, markersize=markersize, alpha=0.5)
 
     return np.array(t1['id']), np.array(t2['id']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
 
@@ -111,7 +124,10 @@ def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
     idx, d2d, d3d = sky1.match_to_catalog_sky(sky1, nthneighbor=(nthneighbor+1))
     # This find a match for each object in t2. Not all objects in t1 catalog is included in the result. 
     
-    matchlist = d2d<(search_radius*u.arcsec)
+    # convert distances to numpy array in arcsec
+    d2d = np.array(d2d.to(u.arcsec))
+
+    matchlist = d2d<search_radius    
     t1['idx'] = idx
     t1['d2d'] = d2d
     t1 = t1[matchlist]
@@ -134,16 +150,26 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
     skycat = SkyCoord(ra*u.degree,dec*u.degree, frame='icrs')
     idx, d2d, _ = skycat.match_to_catalog_sky(skycat, nthneighbor=2)
 
-    mask = d2d<(search_radius*u.arcsec)
+    # convert distances to numpy array in arcsec
+    d2d = np.array(d2d.to(u.arcsec))
+
+    mask = d2d<search_radius
     print(np.sum(mask), "objects with a nearby neighbor")
     n_duplicates = np.sum(mask)
     idx1 = np.arange(len(ra))[mask]
     idx2 = idx[mask]
 
     if plot_q and (n_duplicates!=0):
-        d_ra = ra[idx1] - ra[idx2]
-        d_dec = dec[idx1] - dec[idx2]
-        scatter_plot(d_ra*3600., d_dec*3600.)
+        d_ra = (ra[idx1] - ra[idx2]) * 3600. # arcsec
+        d_dec = (dec[idx1] - dec[idx2]) * 3600. # arcsec
+        ##### Convert d_ra to actual arcsecs #####
+        mask = d_ra > 180*3600
+        d_ra[mask] = d_ra[mask] - 360.*3600
+        mask = d_ra < -180*3600
+        d_ra[mask] = d_ra[mask] + 360.*3600
+        d_ra = d_ra * np.cos(dec[idx1]/180*np.pi)
+        ##########################################
+        scatter_plot(d_ra, d_dec)
 
     if return_indices:
         idx_dup = np.arange(len(ra))[mask]
@@ -153,14 +179,57 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
 
 
 
-def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
-    x_label='$\\mathbf{RA_{cat2} - RA_{cat1} (arcsec)$',
-    y_label='$\\mathbf{dec_{cat2} - dec_{cat1} (arcsec)$'):
+def search_around(ra1, dec1, ra2, dec2, search_radius=1., verbose=True):
+    '''
+    Using the astropy.coordinates.search_around_sky module to find all pairs within
+    some search radius.
+
+    Inputs: 
+    RA and Dec of two catalogs;
+    search_radius (arcsec);
+
+
+    Outputs: 
+        idx1, idx2: indices of matched objects in the two catalogs;
+        d2d: angular distances (arcsec);
+        d_ra, d_dec: the differences in RA and Dec (arcsec); 
+    '''
+    
+    # protect the global variables from being changed by np.sort
+    ra1, dec1, ra2, dec2 = map(np.copy, [ra1, dec1, ra2, dec2])
+    
+    # Matching catalogs
+    sky1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
+    sky2 = SkyCoord(ra2*u.degree,dec2*u.degree, frame='icrs')
+    idx1, idx2, d2d, d3d = sky2.search_around_sky(sky1, seplimit=search_radius*u.arcsec)
+    if verbose:
+        print('%d nearby objects'%len(idx1))
+    
+    # convert distances to numpy array in arcsec
+    d2d = np.array(d2d.to(u.arcsec))
+
+
+    d_ra = (ra2[idx2]-ra1[idx1])*3600.    # in arcsec
+    d_dec = (dec2[idx2]-dec1[idx1])*3600. # in arcsec
+    ##### Convert d_ra to actual arcsecs #####
+    mask = d_ra > 180*3600
+    d_ra[mask] = d_ra[mask] - 360.*3600
+    mask = d_ra < -180*3600
+    d_ra[mask] = d_ra[mask] + 360.*3600
+    d_ra = d_ra * np.cos(dec1[idx1]/180*np.pi)
+    ##########################################
+
+    return idx1, idx2, d2d, d_ra, d_dec
+
+
+
+def scatter_plot(d_ra, d_dec, markersize=1, alpha=1, figsize=8, axis=None, title='', show=True,
+    xlabel='RA2 - RA1 (arcsec)', ylabel=('DEC2 - DEC1 (arcsec)')):
     '''
     INPUTS:
 
      d_ra, d_dec (arcsec): array of RA and Dec difference in arcsec
-     (optional) dec (deg): if specificied, d_ra's are plotted in actual angles
+     (optional): dec (degrees): if specificied, d_ra's are plotted in actual angles
     
     OUTPUTS:
 
@@ -168,16 +237,6 @@ def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
     '''
 
     nullfmt = NullFormatter()         # no labels
-
-    # pairs that cross RA=0
-    mask = d_ra>180*3600
-    d_ra[mask] = d_ra[mask] - 360*3600
-    mask = d_ra<-180*3600
-    d_ra[mask] = d_ra[mask] + 360*3600
-
-    # Convert d_ra to actual angles if dec is specified
-    if dec is not None:
-        d_ra = d_ra * np.cos(dec/180*np.pi)
 
     # definitions for the axes
     left, width = 0.1, 0.85
@@ -188,33 +247,36 @@ def scatter_plot(d_ra, d_dec, dec=None, markersize=1, alpha=1, title='',
     rect_histy = [left, bottom, 0.3, height]
 
     # start with a rectangular Figure
-    plt.figure(figsize=(8,8))
+    plt.figure(figsize=(figsize, figsize))
 
     axScatter = plt.axes(rect_scatter)
+    axScatter.set_title(title)
     axHistx = plt.axes(rect_histx)
     axHisty = plt.axes(rect_histy)
 
-    # # no labels
-    # axHistx.xaxis.set_major_formatter(nullfmt)
-    # axHisty.yaxis.set_major_formatter(nullfmt)
-
-    # the scatter plot
-    # mask = np.logical_and(np.abs(d_ra)<1.66, np.abs(d_dec)<1.)
-    # axScatter.plot(d_ra[mask], d_dec[mask], 'k.', markersize=1)
     axScatter.plot(d_ra, d_dec, 'k.', markersize=markersize, alpha=alpha)
 
     axHistx.hist(d_ra, bins=100, histtype='step', color='r', linewidth=2)
     axHisty.hist(d_dec, bins=100, histtype='step', color='r', linewidth=2, orientation='horizontal')
 
-    axHistx.set_xlim(axScatter.get_xlim())
-    axHisty.set_ylim(axScatter.get_ylim())
+    if axis is None:
+        axHistx.set_xlim(axScatter.get_xlim())
+        axHisty.set_ylim(axScatter.get_ylim())
+    else:
+        axHistx.set_xlim(axis[:2])
+        axHisty.set_ylim(axis[2:])
+        axScatter.set_xlim(axis[:2])
+        axScatter.set_ylim(axis[2:])
 
     axHistx.axis('off')
     axHisty.axis('off')
 
     axScatter.axhline(0, color='r', linestyle='--', linewidth=1.2)
     axScatter.axvline(0, color='r', linestyle='--', linewidth=1.2)
-    axScatter.set_xlabel(('$RA_{cat2} - RA_{cat1} (arcsec)$'))
-    axScatter.set_ylabel(('$dec_{cat2} - dec_{cat1} (arcsec)$'))
-
-    return(axScatter)
+    axScatter.set_xlabel(xlabel)
+    axScatter.set_ylabel(ylabel)
+            
+    if show==True:
+        plt.show()
+    else:
+        return axScatter
