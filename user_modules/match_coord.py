@@ -10,7 +10,7 @@ from matplotlib.ticker import NullFormatter
 def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True,
     keep_all_pairs=False):
     '''
-    Match objects in t1=(ra2, dec2) to t2=(ra1, dec1). 
+    Match objects in (ra2, dec2) to (ra1, dec1). 
 
     Inputs: 
         RA and Dec of two catalogs;
@@ -56,7 +56,8 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     
     init_count = np.sum(matchlist)
 
-    #------------------------------removing doubly matched objects------------------------------
+    #--------------------------------removing doubly matched objects--------------------------------
+    # if more than one object in t2 is matched to the same object in t1, keep only the closest match
     if not keep_all_pairs:
     
         t2.sort('idx')
@@ -105,7 +106,6 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
         scatter_plot(d_ra, d_dec, markersize=markersize, alpha=0.5)
 
     return np.array(t1['id']), np.array(t2['id']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
-
 
 
 def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
