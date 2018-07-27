@@ -50,6 +50,12 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     d2d = np.array(d2d.to(u.arcsec))
 
     matchlist = d2d<search_radius
+    
+    if np.sum(matchlist)==0:
+        if verbose:
+            print('0 matches')
+        return np.array([], dtype=int), np.array([], dtype=int), np.array([]), np.array([]), np.array([])
+
     t2['idx'] = idx
     t2['d2d'] = d2d
     t2 = t2[matchlist]
@@ -103,7 +109,7 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     if plot_q:
         markersize = np.max([0.01, np.min([10, 0.3*100000/len(d_ra)])])    
         axis = [-search_radius*1.05, search_radius*1.05, -search_radius*1.05, search_radius*1.05]
-        scatter_plot(d_ra, d_dec, markersize=markersize, alpha=0.5)
+        scatter_plot(d_ra, d_dec, markersize=markersize, alpha=0.5, axis=axis)
 
     return np.array(t1['id']), np.array(t2['id']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
 
