@@ -148,7 +148,8 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
 
     Return: 
     Number of suspected duplicates. 
-    (Optional) idx_dup: array of indices of suspected duplicates. 
+    (Optional) idx1, idx2: arrays of indices of suspected duplicates. 
+        (Both arrays are returned so one can recreate the scatter plot)
     '''
 
     ra = np.array(ra)
@@ -164,7 +165,6 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
     n_duplicates = np.sum(mask)
     idx1 = np.arange(len(ra))[mask]
     idx2 = idx[mask]
-    idx_dup = idx1
 
     if plot_q and (n_duplicates!=0):
         d_ra = (ra[idx1] - ra[idx2]) * 3600. # arcsec
@@ -179,7 +179,7 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
         scatter_plot(d_ra, d_dec)
 
     if return_indices:
-        return np.sum(mask), idx_dup
+        return np.sum(mask), idx1, idx2
     else:
         return np.sum(mask)
 
