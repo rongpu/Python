@@ -179,9 +179,9 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
         scatter_plot(d_ra, d_dec)
 
     if return_indices:
-        return np.sum(mask), idx1, idx2
+        return n_duplicates, idx1, idx2
     else:
-        return np.sum(mask)
+        return n_duplicates
 
 
 
