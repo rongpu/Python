@@ -2,7 +2,6 @@ from __future__ import print_function, division
 import numpy as np
 from astropy import units as u
 from astropy.table import Table
-import matplotlib.pyplot as plt
 from astropy.coordinates import SkyCoord
 from matplotlib.ticker import NullFormatter
 
@@ -241,6 +240,8 @@ def scatter_plot(d_ra, d_dec, markersize=1, alpha=1, figsize=8, axis=None, title
 
      axScatter: scatter-histogram plot
     '''
+
+    import matplotlib.pyplot as plt
 
     nullfmt = NullFormatter()         # no labels
 
