@@ -3,7 +3,7 @@ import numpy as np
 import statsmodels.api as sm
 from scipy.interpolate import interp1d
 
-def hlmean(data, multiplier=None):
+def hlmean(data, multiplier=None, verbose=True):
     '''
     PURPOSE:
 
@@ -46,7 +46,7 @@ def hlmean(data, multiplier=None):
     '''
 
     ndata = len(data)
-    if ndata==0:
+    if ndata==0 and verbose:
         print('H-L mean: empty array!!!')
     if ndata < 200:
         pairmean = np.zeros(int(ndata*(ndata+1)/2))
