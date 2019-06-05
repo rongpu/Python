@@ -30,7 +30,7 @@ def hlmean(data, multiplier=None, verbose=True):
 
 # ---------------------------------------------------
 
-def hlmean_v2(data, maxpairs=1e7, verbose=True):
+def hlmean_v2(data, maxpairs=1e7, random_seed=None, verbose=True):
     '''
     An improved version of the Hodges-Lehmann estimator.
     '''
@@ -39,7 +39,7 @@ def hlmean_v2(data, maxpairs=1e7, verbose=True):
 
     maxpairs = int(maxpairs)
     ndata = len(data)
-    
+
     if ndata==0:
         if verbose: print('H-L mean: empty array!!!')
         return None
@@ -52,6 +52,8 @@ def hlmean_v2(data, maxpairs=1e7, verbose=True):
         pairmean = np.concatenate([pairmean1, pairmean2])
         hlmean = np.median(pairmean)
     else:
+        if random_seed is not None:
+            np.random.seed(random_seed)
         idx1, idx2 = np.random.choice(ndata, size=(maxpairs, 2)).transpose()
         pairmean = (data[idx1]+data[idx2])/2.
         hlmean = np.median(pairmean)
