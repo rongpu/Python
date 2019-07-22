@@ -113,19 +113,22 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     return np.array(t1['id']), np.array(t2['id']), np.array(t2['d2d']), np.array(d_ra), np.array(d_dec)
 
 
-def find_neighbor(ra1, dec1, search_radius=1., nthneighbor=1):
+def find_neighbor(ra, dec, search_radius=1., nthneighbor=1):
     '''
     Find the n-th nearest neighbor. 
     nthneighbor: the n-th neighbor; the nthneighbor=1 is the first neighbor other than itself. 
     '''
     
+    # protect the global variables from being changed by np.sort
+    ra, dec = map(np.copy, [ra, dec])
+
     t1 = Table()
-    t1['ra'] = ra1
-    t1['dec'] = dec1
+    t1['ra'] = ra
+    t1['dec'] = dec
     t1['id'] = np.arange(len(t1))
 
     # Matching catalogs
-    sky1 = SkyCoord(ra1*u.degree,dec1*u.degree, frame='icrs')
+    sky1 = SkyCoord(ra*u.degree,dec*u.degree, frame='icrs')
     idx, d2d, d3d = sky1.match_to_catalog_sky(sky1, nthneighbor=(nthneighbor+1))
     # This find a match for each object in t2. Not all objects in t1 catalog is included in the result. 
     
@@ -150,6 +153,9 @@ def match_self(ra, dec, search_radius=1., return_indices=False, plot_q=False):
     (Optional) idx1, idx2: arrays of indices of suspected duplicates. 
         (Both arrays are returned so one can recreate the scatter plot)
     '''
+
+    # protect the global variables from being changed by np.sort
+    ra, dec = map(np.copy, [ra, dec])
 
     ra = np.array(ra)
     dec = np.array(dec)
