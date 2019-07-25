@@ -50,14 +50,14 @@ def hlmean_v2(data, maxpairs=1e7, random_seed=None, verbose=True):
         # the pairwise mean of identical indices
         pairmean2 = data
         pairmean = np.concatenate([pairmean1, pairmean2])
-        hlmean = np.median(pairmean)
+        hlmean_value = np.median(pairmean)
     else:
         if random_seed is not None:
             np.random.seed(random_seed)
         idx1, idx2 = np.random.choice(ndata, size=(maxpairs, 2)).transpose()
         pairmean = (data[idx1]+data[idx2])/2.
-        hlmean = np.median(pairmean)
-    return(hlmean)
+        hlmean_value = np.median(pairmean)
+    return(hlmean_value)
 
 # ---------------------------------------------------
 
