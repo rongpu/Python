@@ -11,6 +11,8 @@ def hlmean(data, multiplier=None, verbose=True):
     ndata = len(data)
     if ndata==0 and verbose:
         print('H-L mean: empty array!!!')
+    if ndata==1:
+        return data[0]
     if ndata < 200:
         pairmean = np.zeros(int(ndata*(ndata+1)/2))
         index = 0
@@ -43,6 +45,8 @@ def hlmean_v2(data, maxpairs=1e7, random_seed=None, verbose=True):
     if ndata==0:
         if verbose: print('H-L mean: empty array!!!')
         return None
+    if ndata==1:
+        return data[0]
     if ndata*(ndata-1)/2 <= maxpairs:
         # only non-identical indices are included
         idx1, idx2 = np.array(list(itertools.combinations(np.arange(ndata), 2))).transpose()
@@ -57,6 +61,7 @@ def hlmean_v2(data, maxpairs=1e7, random_seed=None, verbose=True):
         idx1, idx2 = np.random.choice(ndata, size=(maxpairs, 2)).transpose()
         pairmean = (data[idx1]+data[idx2])/2.
         hlmean_value = np.median(pairmean)
+    
     return(hlmean_value)
 
 # ---------------------------------------------------
