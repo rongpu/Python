@@ -1,0 +1,169 @@
+# load my modules #--------------------------------------------
+
+os.path.join(os.getenv('DATA_PATH'), 'abc.fits')
+
+sys.path.append(os.path.expanduser('~/git/desi-lrg-selection'))
+sys.path.append(os.path.expanduser('~/git/Python/user_modules/'))
+sys.path.append(os.path.expanduser('~/git/wise-mask-query'))
+sys.path.append(os.path.expanduser('~/git/desi-photoz/'))
+
+# visual inspection #--------------------------------------------
+
+idx = np.where(mask)[0]
+idx = np.random.choice(idx, size=200, replace=False)
+t = Table()
+t['RA'] = cat['RA'][idx]
+t['DEC'] = cat['DEC'][idx]
+t.write('/Users/rongpu/Downloads/visual_inspection.txt', format='ascii.no_header')
+
+# convert to magnitude #--------------------------------------------
+
+import warnings.catch_warnings
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    cat['gmag'] = 22.5 - 2.5*np.log10(cat['FLUX_G'])
+    cat['rmag'] = 22.5 - 2.5*np.log10(cat['FLUX_R'])
+    cat['zmag'] = 22.5 - 2.5*np.log10(cat['FLUX_Z'])
+    cat['w1mag'] = 22.5 - 2.5*np.log10(cat['FLUX_W1'])
+    cat['w2mag'] = 22.5 - 2.5*np.log10(cat['FLUX_W2'])
+    cat['gmagerr'] = 1/np.sqrt(cat['FLUX_IVAR_G'])/cat['FLUX_G']
+    cat['rmagerr'] = 1/np.sqrt(cat['FLUX_IVAR_R'])/cat['FLUX_R']
+    cat['zmagerr'] = 1/np.sqrt(cat['FLUX_IVAR_Z'])/cat['FLUX_Z']
+    cat['w1magerr'] = 1/np.sqrt(cat['FLUX_IVAR_W1'])/cat['FLUX_W1']
+    cat['w2magerr'] = 1/np.sqrt(cat['FLUX_IVAR_W2'])/cat['FLUX_W2']
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    cat['gmag'] = 22.5 - 2.5*np.log10(cat['FLUX_G']/cat['MW_TRANSMISSION_G'])
+    cat['rmag'] = 22.5 - 2.5*np.log10(cat['FLUX_R']/cat['MW_TRANSMISSION_R'])
+    cat['zmag'] = 22.5 - 2.5*np.log10(cat['FLUX_Z']/cat['MW_TRANSMISSION_Z'])
+    cat['w1mag'] = 22.5 - 2.5*np.log10(cat['FLUX_W1']/cat['MW_TRANSMISSION_W1'])
+    cat['w2mag'] = 22.5 - 2.5*np.log10(cat['FLUX_W2']/cat['MW_TRANSMISSION_W2'])
+    cat['gmagerr'] = 1/np.sqrt(cat['FLUX_IVAR_G'])/(cat['FLUX_G']/cat['MW_TRANSMISSION_G'])
+    cat['rmagerr'] = 1/np.sqrt(cat['FLUX_IVAR_R'])/(cat['FLUX_R']/cat['MW_TRANSMISSION_R'])
+    cat['zmagerr'] = 1/np.sqrt(cat['FLUX_IVAR_Z'])/(cat['FLUX_Z']/cat['MW_TRANSMISSION_Z'])
+    cat['w1magerr'] = 1/np.sqrt(cat['FLUX_IVAR_W1'])/(cat['FLUX_W1']/cat['MW_TRANSMISSION_W1'])
+    cat['w2magerr'] = 1/np.sqrt(cat['FLUX_IVAR_W2'])/(cat['FLUX_W2']/cat['MW_TRANSMISSION_W2'])
+
+lrg['gdepth'] = -2.5*(np.log10((5/np.sqrt(lrg['g_galdepth'])))-9)
+
+# return counts #--------------------------------------------
+
+t = Table()
+t['type'], t['counts'] = np.unique(cat['type'], return_counts=True)
+t.sort('counts')
+t
+
+# return counts and more #---------------------------------------------
+
+t = Table()
+t['type'], t['counts'] = np.unique(cat['TYPE'], return_counts=True)
+t['frac (%)'] = t['counts']/len(cat)*100
+# t['type'], t['counts'] = np.unique(cat['TYPE'][mask], return_counts=True)
+# t['frac (%)'] = t['counts']/np.sum(mask)*100
+t['frac (%)'].format = '%.1f'
+t.sort('counts')
+t
+
+# commands #---------------------------------------------
+
+ps -A | grep ssh
+
+sudo route delete xingwang1990.ddns.net
+
+# matplotlib default #----------------------------------------------
+params = {'legend.fontsize': 'x-large',
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large',
+         'figure.facecolor':'w'} 
+plt.rcParams.update(params)
+
+# python imports #----------------------------------------------
+
+from __future__ import division, print_function
+import numpy as np
+from astropy.table import Table, vstack, hstack
+import fitsio
+import sys, os, warnings
+#import matplotlib.pyplot as plt
+
+# Matplotlib 2D histogram #----------------------------------------------
+
+xbins, ybins = np.linspace(18, 22, 100), np.linspace(18, 23, 100)
+plt.figure(figsize=(8, 6))
+plt.hist2d((cat['zmag']), (cat['rmag']), bins=[xbins, ybins])
+# Log scale:
+# from matplotlib.colors import LogNorm
+# plt.hist2d((cat['zmag']), (cat['rmag']), bins=[xbins, ybins], norm=LogNorm())
+plt.xlabel('zmag')
+plt.ylabel('rmag')
+plt.colorbar()
+plt.show()
+
+# Reload module #----------------------------------------------
+
+import importlib
+importlib.reload(module)
+
+# NMAD #----------------------------------------------
+
+nmad = lambda x: 1.48 * np.median(np.abs(x-np.median(x)))
+
+# directory tree #----------------------------------------------
+
+namei -mo  /global/cscratch1/sd/rongpu/dr7_lrg_photoz/lrg_chunks/
+
+# bitmask #-----------------------------------------------------
+
+bitmask = np.arange(100)
+mask = (bitmask&4)>0   # bit mask of 0100
+
+# Split a catalog into smaller chunks #-------------------------
+
+n_split = 8
+size = len(cat)//n_split
+for index in range(n_split):
+    if index==0:
+        cat1 = cat[:size]
+    elif index==(n_split-1):
+        cat1 = cat[size*(n_split-1):len(cat)]
+    else:
+        cat1 = cat[size*index:size*(index+1)]
+
+# photo-z 1-sigma interval #-------------------------------------------
+
+cat['z_phot_1_sigma'] = (cat['z_phot_u68']-cat['z_phot_l68'])/2
+
+
+# automatically select sweep files within some RA and DEC range # -----
+
+ramin, ramax, decmin, decmax = 180, 190, 5, 15
+
+sweep_path_all = glob.glob(os.path.join(sweep_dir, '*.fits'))
+sweep_fn_all = [os.path.basename(sweep_path_all[ii]) for ii in range(len(sweep_path_all))]
+sweep_fn_list = []
+for index in range(len(sweep_fn_all)):
+    brick = sweep_fn_all[index][-20:-5]
+    ra1min, ra1max = float(brick[0:3]), float(brick[8:11])
+    dec1min = float(brick[4:7]) if brick[3]=='p' else -float(brick[4:7])
+    dec1max = float(brick[-3:]) if brick[-4]=='p' else -float(brick[-3:])
+    if (((ramin>=ra1min) & (ramin<ra1max)) | ((ramax>ra1min) & (ramax<=ra1max))) \
+         & (((decmin>=dec1min) & (decmin<dec1max)) | ((decmax>dec1min) & (decmax<=dec1max))) \
+    or (((ra1min>=ramin) & (ra1min<ramax)) | ((ra1max>ramin) & (ra1max<=ramax))) \
+         & (((dec1min>=decmin) & (dec1min<decmax)) | ((dec1max>decmin) & (dec1max<=decmax))):
+        sweep_fn_list.append(sweep_fn_all[index])
+
+# get the length of FITS file without reading the whole file #-------
+
+from astropy.io import fits
+
+fits_tmp = fits.open(os.path.join(sweep_dir, sweep_fn))
+fits_length = fits_tmp[1].header['NAXIS2']
+
+# #-------------------------------------------------------------
+
+
+
