@@ -133,7 +133,7 @@ def poly_val1d(x, m):
     '''
     
     order = len(m)-1
-    z = np.zeros_like(x)
+    z = np.zeros(x.shape)
     for i in range(order+1):
         z += m[i] * x**i
     return z
@@ -163,7 +163,7 @@ def poly_val1d_more(x, res):
     
     m = res.params
     order = len(m)-1
-    z = np.zeros_like(x)
+    z = np.zeros(x.shape)
     for i in range(order+1):
         z += m[i] * x**i
     return z
@@ -198,8 +198,8 @@ def rlm_fit2d(x, y, z, t=1.5, order=2):
     New values can be evaluated using poly_val2d.py
     '''
     
-    ncols = (order+2)*(order+1)/2
-    a = np.zeros((x.size,ncols))
+    ncols = (order+2)*(order+1)//2
+    a = np.zeros((x.size, ncols))
     k=0
     for i in range(order+1):
         for j in range(order-i+1):
@@ -227,7 +227,7 @@ def poly_val2d(x, y, m):
     '''
     
     order = int((np.sqrt(8*len(m)+1)-3)/2)
-    z = np.zeros_like(x)
+    z = np.zeros(x.shape)
     k=0
     for i in range(order+1):
         for j in range(order-i+1):
