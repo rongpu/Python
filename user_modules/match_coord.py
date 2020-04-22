@@ -7,13 +7,14 @@ from matplotlib.ticker import NullFormatter
 
 
 def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True,
-    keep_all_pairs=False):
+    keep_all_pairs=False, markersize=None):
     '''
     Match objects in (ra2, dec2) to (ra1, dec1). 
 
     Inputs: 
         RA and Dec of two catalogs;
         search_radius: in arcsec;
+        nthneighbor: find the n-th closest neighbor; 1 being the closest;
         (Optional) keep_all_pairs: if true, then all matched pairs are kept; otherwise, if more than
         one object in t2 is match to the same object in t1 (i.e. double match), only the closest pair
         is kept.
@@ -106,7 +107,8 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     ##########################################
 
     if plot_q:
-        markersize = np.max([0.01, np.min([10, 0.3*100000/len(d_ra)])])    
+        if markersize is None:
+            markersize = np.max([0.01, np.min([10, 0.3*100000/len(d_ra)])])    
         axis = [-search_radius*1.05, search_radius*1.05, -search_radius*1.05, search_radius*1.05]
         scatter_plot(d_ra, d_dec, markersize=markersize, alpha=0.5, axis=axis)
 
