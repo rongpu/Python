@@ -282,3 +282,25 @@ def extrap1d(x, y, kind='linear', extrap='constant'):
             return np.array(map(pointwise, [x]))
 
     return ufunclike
+
+# ---------------------------------------------------
+
+def create_image(data, cmap='gray', dpi=80, vmin=None, vmax=None, origin=None, norm=None):    
+    '''
+    Create an image with exactly the same pixel dimension as the data.
+    Example:
+        x, y = np.arange(0, 10), np.arange(0, 10)
+        xx, yy = np.meshgrid(x, y)
+        img = np.array((xx + yy)%2==0, dtype=int)
+        ax = create_image(img)
+        plt.savefig('img.png')
+        plt.close()
+    '''
+    xpixels, ypixels = data.shape[0], data.shape[1]
+    figsize = ypixels / dpi, xpixels / dpi
+    fig = plt.figure(figsize=figsize, dpi=dpi)
+    ax = fig.add_axes([0, 0, 1, 1])
+    ax.imshow(data, cmap=cmap, interpolation='none', vmin=vmin, vmax=vmax, origin=origin, norm=norm)
+    plt.axis('off')
+    return ax
+
