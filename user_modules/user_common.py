@@ -1,6 +1,5 @@
 from __future__ import division, print_function
 import numpy as np
-import statsmodels.api as sm
 from scipy.interpolate import interp1d
 
 def hlmean(data, multiplier=None, verbose=True):
@@ -107,6 +106,8 @@ def rlm_fit1d(x, y, t=1.5, order=1):
     so that y = a0 + a1*x + a2*x**2 + ...
     '''
     
+    import statsmodels.api as sm
+
     ncols = order+1
     a = np.zeros((x.size,ncols))
     for i in range(order+1):
@@ -145,7 +146,9 @@ def rlm_fit1d_more(x, y, t=1.5, order=1):
     Same as rlm_fit1d_more, except that instead of only returning the 
     fitting parameters, the full regression result is return. 
     '''
-    
+
+    import statsmodels.api as sm
+
     ncols = order+1
     a = np.zeros((x.size,ncols))
     for i in range(order+1):
@@ -198,6 +201,8 @@ def rlm_fit2d(x, y, z, t=1.5, order=2):
     New values can be evaluated using poly_val2d.py
     '''
     
+    import statsmodels.api as sm
+
     ncols = (order+2)*(order+1)//2
     a = np.zeros((x.size, ncols))
     k=0
@@ -275,11 +280,11 @@ def extrap1d(x, y, kind='linear', extrap='constant'):
 
     def ufunclike(x):
         if isinstance(x, np.ndarray):
-            return np.array(map(pointwise, np.array(x)))
+            return np.array(list(map(pointwise, np.array(x))))
         elif isinstance(x, list):
-            return np.array(map(pointwise, np.array(x)))
+            return np.array(list(map(pointwise, np.array(x))))
         else:
-            return np.array(map(pointwise, [x]))
+            return np.array(list(map(pointwise, [x])))
 
     return ufunclike
 
