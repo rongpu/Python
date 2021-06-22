@@ -2,32 +2,36 @@ import cv2
 import os
 import glob
 
-image_folder = 'timelapse'
-# video_name = 'video.avi'
 video_name = 'video.mp4'
+downsize = True
 
-images_fn = sorted(glob.glob(os.path.join(image_folder, '*.JPG')))
-frame = cv2.imread(images_fn[0])
+image_fns = sorted(glob.glob('*.JPG'))
+frame = cv2.imread(image_fns[0])
 height, width, layers = frame.shape
 
-width, height = width//2, height//2
+if downsize:
+    width, height = width//2, height//2
 
 # video = cv2.VideoWriter(video_name, 0, 1, (width,height))
 
 # Define the codec and create VideoWriter object
-fourcc = cv2.VideoWriter_fourcc(*'mp4v') # Be sure to use lower case
+fourcc = cv2.VideoWriter_fourcc(*'avc1')  # Be sure to use lower case
 video = cv2.VideoWriter(video_name, fourcc, 30.0, (width, height))
 
-for image_fn in images_fn:
+for index, image_fn in enumerate(image_fns):
+
+    if index%100==0:
+        print('{} / {}'.format(index, len(image_fns)))
 
     img = cv2.imread(image_fn)
 
-    # resize image
-    dim = (width, height)
-    img_resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)
+    if downsize:
+        # downsize image
+        dim = (width, height)
+        img = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+        # INTER_AREA is better than INTER_LANCZOS4 when downsampling by an integer factor (e.g. 6000x4000 to 3000x2000)
 
-    video.write(img_resized)
+    video.write(img)
 
 cv2.destroyAllWindows()
 video.release()
-
