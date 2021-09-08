@@ -6,6 +6,8 @@ video_name = 'video.mp4'
 downsize = True
 
 image_fns = sorted(glob.glob('*.JPG'))
+image_fns.sort(key=os.path.getmtime)  # Sort by date modified
+
 frame = cv2.imread(image_fns[0])
 height, width, layers = frame.shape
 

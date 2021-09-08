@@ -8,6 +8,8 @@ import glob
 video_name = 'video_4k.mp4'
 
 image_fns = sorted(glob.glob('*.JPG'))
+image_fns.sort(key=os.path.getmtime)  # Sort by date modified
+
 frame = cv2.imread(image_fns[0])
 height, width, layers = frame.shape
 
@@ -18,7 +20,7 @@ width, height = 3840, 2160  # 4K
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'avc1')  # Be sure to use lower case
 # avc1 is slightly better than mp4v
-video = cv2.VideoWriter(video_name, fourcc, 30.0, (width, height))
+video = cv2.VideoWriter(video_name, fourcc, 60.0, (width, height))
 
 for index, image_fn in enumerate(image_fns):
 

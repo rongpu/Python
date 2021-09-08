@@ -6,18 +6,20 @@ from astropy.coordinates import SkyCoord
 from matplotlib.ticker import NullFormatter
 
 
-def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=True, verbose=True,
+def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, priority2=None, plot_q=True, verbose=True,
     keep_all_pairs=False, markersize=None):
     '''
-    Match objects in (ra2, dec2) to (ra1, dec1). 
+    Match objects in t2(ra2, dec2) to t1(ra1, dec1). 
 
     Inputs: 
         RA and Dec of two catalogs;
         search_radius: in arcsec;
         nthneighbor: find the n-th closest neighbor; 1 being the closest;
-        (Optional) keep_all_pairs: if true, then all matched pairs are kept; otherwise, if more than
-        one object in t2 is match to the same object in t1 (i.e. double match), only the closest pair
-        is kept.
+        priority2: priority for t2 for breaking ties of double matches; if None (default), closest
+        match has highest priority;
+        (Optional) keep_all_pairs: if true, then all matches are kept; otherwise, if more than
+        one object in t2 is match to the same object in t1 (i.e. double match), only the closest or
+        highest priority match is kept.
 
     Outputs: 
         idx1, idx2: indices of matched objects in the two catalogs;
@@ -36,6 +38,9 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
     t2['ra'] = ra2
     t1['dec'] = dec1
     t2['dec'] = dec2
+
+    if priority2 is not None:
+        t2['priority']=priority2
     
     t1['id'] = np.arange(len(t1))
     t2['id'] = np.arange(len(t2))
@@ -73,8 +78,11 @@ def match_coord(ra1, dec1, ra2, dec2, search_radius=1., nthneighbor=1, plot_q=Tr
                 end = i+1
                 while end+1<=len(t2)-1 and t2['idx'][i]==t2['idx'][end+1]:
                     end = end+1
-                findmin = np.argmin(t2['d2d'][i:end+1])
-                for j in range(i,end+1):
+                if priority2 is None:
+                    findmin = np.argmin(t2['d2d'][i:end+1])
+                else:
+                    findmin = np.argmax(t2['priority'][i:end+1])
+                for j in range(i, end+1):
                     if j!=i+findmin:
                         t2['idx'][j]=-99
                 i = end+1
