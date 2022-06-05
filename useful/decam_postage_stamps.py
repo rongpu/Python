@@ -18,7 +18,7 @@ params = {'legend.fontsize': 'large',
          'axes.titlesize':'large',
          'xtick.labelsize':'large',
          'ytick.labelsize':'large',
-         'figure.facecolor':'w'} 
+         'figure.facecolor':'w'}
 plt.rcParams.update(params)
 
 # nmad = lambda x: 1.4826 * np.median(np.abs(x-np.median(x)))
@@ -138,8 +138,8 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
 
     if vrange is None:
         band = image_path[image_path.find('_ooi_')+5]
-        vrange = image_vrange[band]
-        vrange[0], vrange[1] = vrange[0]*exptime/100., vrange[1]*exptime/100.
+        vrange = np.array(image_vrange[band])
+        vrange[0] = vrange*exptime/100.
 
     if blob_mask:
         str_loc = str.find(ccd['image_filename'][ccd_index].strip(), '.fits')
@@ -237,7 +237,7 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
         ra, dec = ccd_ra[ii], ccd_dec[ii]
 
         fig = plt.imshow(img.T, cmap=cmap, vmin=vrange[0], vmax=vrange[1],
-                   extent=(ra-ysize*pix_size*binsize/2, ra+ysize*pix_size*binsize/2, dec-xsize*pix_size*binsize/2, dec+xsize*pix_size*binsize/2))
+                         extent=(ra-ysize*pix_size*binsize/2, ra+ysize*pix_size*binsize/2, dec-xsize*pix_size*binsize/2, dec+xsize*pix_size*binsize/2))
 
     plt.axis([1.07, -1.07, -1.0, 1.0])
     plt.axis('off')
@@ -422,8 +422,8 @@ def decam_postage_stamp(exposure, binsize=120, plot_path=None, save_path=None, v
     if (plot_path is not None) or show:
 
         if vrange is None:
-            vrange = image_vrange[band]
-            vrange[0], vrange[1] = vrange[0]*exptime/100., vrange[1]*exptime/100.
+            vrange = np.array(image_vrange[band])
+            vrange[0] = vrange*exptime/100.
         ax = create_image(fullimg, cmap=cmap, vmin=vrange[0], vmax=vrange[1])
         plt.savefig(plot_path)
 
