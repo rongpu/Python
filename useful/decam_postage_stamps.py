@@ -99,7 +99,7 @@ blob_dir = '/global/cfs/cdirs/desi/users/rongpu/dr9/decam_ccd_blob_mask'
 surveyccd_path = '/global/cfs/cdirs/desi/users/rongpu/useful/survey-ccds-decam-dr9-trim.fits'
 surveyccd_path_dr8 = '/global/cfs/cdirs/desi/users/rongpu/useful/survey-ccds-decam-dr8-trim.fits'
 
-image_vrange = {'u':[-5, 5], 'g':[-5, 5], 'r':[-6, 6], 'i':[-10, 10], 'z':[-30, 30], 'Y':[-30, 30]}
+image_vrange = {'u':[-5, 5], 'g':[-5, 5], 'r':[-6, 6], 'i':[-10, 10], 'z':[-30, 30], 'Y':[-30, 30]}  # per 100s exposure time
 
 ################################################################################
 
@@ -133,9 +133,13 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
         print('File does not exist:', image_path)
         return None
 
+    header = fitsio.read_header(image_path)
+    exptime = header['EXPTIME']
+
     if vrange is None:
         band = image_path[image_path.find('_ooi_')+5]
         vrange = image_vrange[band]
+        vrange[0], vrange[1] = vrange[0]*exptime/100., vrange[1]*exptime/100.
 
     if blob_mask:
         str_loc = str.find(ccd['image_filename'][ccd_index].strip(), '.fits')
@@ -306,6 +310,9 @@ def decam_postage_stamp(exposure, binsize=120, plot_path=None, save_path=None, v
             print('File does not exist:', image_path)
             return None
 
+        header = fitsio.read_header(image_path)
+        exptime = header['EXPTIME']
+
         if blob_mask:
             str_loc = str.find(image_path, '.fits')
             img_filename_base = image_path[len(image_dir)+1:str_loc]
@@ -416,6 +423,7 @@ def decam_postage_stamp(exposure, binsize=120, plot_path=None, save_path=None, v
 
         if vrange is None:
             vrange = image_vrange[band]
+            vrange[0], vrange[1] = vrange[0]*exptime/100., vrange[1]*exptime/100.
         ax = create_image(fullimg, cmap=cmap, vmin=vrange[0], vmax=vrange[1])
         plt.savefig(plot_path)
 
