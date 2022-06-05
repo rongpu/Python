@@ -105,7 +105,7 @@ image_vrange = {'u':[-5, 5], 'g':[-5, 5], 'r':[-6, 6], 'i':[-10, 10], 'z':[-30, 
 
 
 def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='seismic', dr8=False, binsize=20, median=True,
-               blob_mask=False, ood_mask=False, gaussian_sigma=None, show=False):
+               blob_mask=False, ood_mask=False, gaussian_sigma=None, subtract_median_sky=True, show=False):
     '''
     Create high-resolution DECam images.
     Example:
@@ -196,13 +196,14 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
             img = img[:, :half]
 
         # Remove constant background
-        if not blob_mask:
-            # naive sky estimation
-            mask = (img<np.nanpercentile(img.flatten(), 95))
-            median_sky = np.nanmedian(img[mask].flatten())
-        else:
-            median_sky = np.nanmedian(img)
-        img = img - median_sky
+        if subtract_median_sky:
+            if not blob_mask:
+                # naive sky estimation
+                mask = (img<np.nanpercentile(img.flatten(), 95))
+                median_sky = np.nanmedian(img[mask].flatten())
+            else:
+                median_sky = np.nanmedian(img)
+            img = img - median_sky
 
         # Add back the other half
         if ccdname=='S7':
