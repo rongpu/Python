@@ -139,7 +139,7 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
     if vrange is None:
         band = image_path[image_path.find('_ooi_')+5]
         vrange = np.array(image_vrange[band])
-        vrange[0] = vrange*exptime/100.
+        vrange = vrange*exptime/100.
 
     if blob_mask:
         str_loc = str.find(ccd['image_filename'][ccd_index].strip(), '.fits')
@@ -423,7 +423,7 @@ def decam_postage_stamp(exposure, binsize=120, plot_path=None, save_path=None, v
 
         if vrange is None:
             vrange = np.array(image_vrange[band])
-            vrange[0] = vrange*exptime/100.
+            vrange = vrange*exptime/100.
         ax = create_image(fullimg, cmap=cmap, vmin=vrange[0], vmax=vrange[1])
         plt.savefig(plot_path)
 
