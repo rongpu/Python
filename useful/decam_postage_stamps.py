@@ -209,7 +209,10 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
             tmp = img_original
             half = img_shape[1] // 2
             tmp[:, :half] = img
-            tmp[:, half:] = np.nan
+            if tmp.dtype==float:
+                tmp[:, half:] = np.nan
+            elif tmp.dtype==int:
+                tmp[:, half:] = 0
             img = tmp
 
         ################ downsize image ################
