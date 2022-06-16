@@ -92,9 +92,9 @@ y_pix = np.array([    0,     0,     0,  2249,  2249,  2249,  2249,  4498,  4498,
 img_shape = (4094, 2046)
 pix_size = 0.262/3600
 
-image_dir = '/global/project/projectdirs/cosmo/staging'
+image_dir = '/global/cfs/cdirs/cosmo/staging'
 blob_dir = '/global/cfs/cdirs/desi/users/rongpu/dr9/decam_ccd_blob_mask'
-# surveyccd_path = '/global/project/projectdirs/cosmo/work/legacysurvey/dr9m/survey-ccds-decam-dr9.fits.gz'
+# surveyccd_path = '/global/cfs/cdirs/cosmo/work/legacysurvey/dr9m/survey-ccds-decam-dr9.fits.gz'
 # surveyccd_path_dr8 = '/global/cfs/cdirs/cosmo/work/legacysurvey/dr9-garage/reorg/decam/survey-ccds-decam-dr8-newlocs2.fits.gz'
 surveyccd_path = '/global/cfs/cdirs/desi/users/rongpu/useful/survey-ccds-decam-dr9-trim.fits'
 surveyccd_path_dr8 = '/global/cfs/cdirs/desi/users/rongpu/useful/survey-ccds-decam-dr8-trim.fits'
