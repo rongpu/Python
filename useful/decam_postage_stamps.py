@@ -14,16 +14,16 @@ from astropy.io import fits
 from scipy.ndimage.filters import gaussian_filter
 
 params = {'legend.fontsize': 'large',
-         'axes.labelsize': 'large',
-         'axes.titlesize':'large',
-         'xtick.labelsize':'large',
-         'ytick.labelsize':'large',
-         'figure.facecolor':'w'}
+          'axes.labelsize': 'large',
+          'axes.titlesize': 'large',
+          'xtick.labelsize': 'large',
+          'ytick.labelsize': 'large',
+          'figure.facecolor': 'w'}
 plt.rcParams.update(params)
 
 # nmad = lambda x: 1.4826 * np.median(np.abs(x-np.median(x)))
 
-ccdnamenumdict = {'S1': 25, 'S2': 26, 'S3': 27, 'S4':28,
+ccdnamenumdict = {'S1': 25, 'S2': 26, 'S3': 27, 'S4': 28,
                   'S5': 29, 'S6': 30, 'S7': 31,
                   'S8': 19, 'S9': 20, 'S10': 21, 'S11': 22, 'S12': 23,
                   'S13': 24,
@@ -99,7 +99,7 @@ blob_dir = '/global/cfs/cdirs/desi/users/rongpu/dr9/decam_ccd_blob_mask'
 surveyccd_path = '/global/cfs/cdirs/desi/users/rongpu/useful/survey-ccds-decam-dr9-trim.fits'
 surveyccd_path_dr8 = '/global/cfs/cdirs/desi/users/rongpu/useful/survey-ccds-decam-dr8-trim.fits'
 
-image_vrange = {'u':[-5, 5], 'g':[-5, 5], 'r':[-6, 6], 'i':[-10, 10], 'z':[-30, 30], 'Y':[-30, 30]}  # per 100s exposure time
+image_vrange = {'u':[-5, 5], 'g':[-5, 5], 'r':[-7, 7], 'i':[-10, 10], 'z':[-30, 30], 'Y':[-30, 30]}  # per 100s exposure time
 
 ################################################################################
 
@@ -162,7 +162,7 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
             # img = fitsio.read(image_path, ext=ccdname)
             img = hdu[ccdname].data
         except (KeyError, OSError):
-            if ccdname!='S30': # mute S30
+            if ccdname!='S30':  # mute S30
                 print('{} does not exist in image ({})!'.format(ccdname, exposure))
             continue
 
@@ -408,7 +408,7 @@ def decam_postage_stamp(exposure, binsize=120, plot_path=None, save_path=None, v
                 else:
                     img = np.nanmedian(np.nanmedian(img.reshape((img.shape[0]//binsize, binsize, img.shape[1]//binsize,-1)), axis=3), axis=1)
                 nanmask = np.mean(np.mean(nanmask.reshape((nanmask.shape[0]//binsize, binsize, nanmask.shape[1]//binsize,-1)), axis=3), axis=1)
-            mask = nanmask<0.01 # require at least 1% of the pixels to be unmasked
+            mask = nanmask<0.01  # require at least 1% of the pixels to be unmasked
             img[mask] = np.nan
 
             ################################################
