@@ -140,6 +140,7 @@ def decam_plot(exposure, plot_path=None, figsize=(13, 12), vrange=None, cmap='se
         band = image_path[image_path.find('_ooi_')+5]
         vrange = np.array(image_vrange[band])
         vrange = vrange*exptime/100.
+    print('vrange:', vrange)
 
     if blob_mask:
         str_loc = str.find(ccd['image_filename'][ccd_index].strip(), '.fits')

@@ -18,7 +18,7 @@ __all__ = ['get_ebv_from_map']
 mapdir = '/global/cfs/cdirs/desi/users/rongpu/useful/sfddata'
 # mapdir = '/Users/rongpu/Documents/Data/useful/sfddata'
 
-def get_ebv_from_map(coordinates, interpolate=True, order=1):
+def get_ebv_from_map(coordinates, equatorial=True, interpolate=True, order=1, mapdir=mapdir):
     """Get E(B-V) value(s) from Schlegel, Finkbeiner, and Davis 1998 extinction
     maps at the given coordinates.
 
@@ -45,19 +45,23 @@ def get_ebv_from_map(coordinates, interpolate=True, order=1):
         Specific extinction E(B-V) at the given locations.
 
     """
-    
+
     # Get mapdir
     fname = os.path.join(mapdir, 'SFD_dust_4096_{0}.fits')
 
-    # Parse input 
-    # if not isinstance(coordinates, coord.SphericalCoordinatesBase):
-    ra, dec = coordinates
-    coordinates = SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
-
-    # Convert to galactic coordinates.
-    coordinates = coordinates.galactic
-    l = coordinates.l.radian
-    b = coordinates.b.radian
+    if equatorial:
+        # Parse input
+        # if not isinstance(coordinates, coord.SphericalCoordinatesBase):
+        ra, dec = coordinates
+        coordinates = SkyCoord(ra=ra*u.degree, dec=dec*u.degree, frame='icrs')
+        # Convert to galactic coordinates.
+        coordinates = coordinates.galactic
+        l = coordinates.l.radian
+        b = coordinates.b.radian
+    else:
+        l, b = coordinates
+        l = np.radians(l)
+        b = np.radians(b)
 
     # Check if l, b are scalar
     return_scalar = False
