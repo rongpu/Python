@@ -18,7 +18,7 @@ if downsize:
 
 # Define the codec and create VideoWriter object
 fourcc = cv2.VideoWriter_fourcc(*'avc1')  # Be sure to use lower case
-video = cv2.VideoWriter(video_name, fourcc, 30.0, (width, height))
+video = cv2.VideoWriter(video_name, fourcc, 60.0, (width, height))
 
 for index, image_fn in enumerate(image_fns):
 
