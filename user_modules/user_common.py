@@ -4,7 +4,7 @@ from scipy.interpolate import interp1d
 import matplotlib.pyplot as plt
 
 
-def hlmean(data, multiplier=None, verbose=True):
+def hlmean_old(data, multiplier=None, verbose=True):
     '''
     Hodges-Lehmann estimator.
     '''
@@ -32,7 +32,7 @@ def hlmean(data, multiplier=None, verbose=True):
     return(np.median(pairmean))
 
 
-def hlmean_v2(data, maxpairs=1e8, random_seed=None, verbose=True):
+def hlmean(data, maxpairs=1e8, random_seed=None, verbose=True):
     '''
     Hodges-Lehmann estimator.
     '''
@@ -226,6 +226,25 @@ def poly_fit_nd(X, y, rlm=False, order=1, t=1.5):
     OUTPUT:
     m: polynomial coefficients;
     powers_arr: 2D arrays of the power of each variable
+
+    Example:
+        n = 20000
+        x1 = np.random.rand(n)
+        x2 = np.random.rand(n)
+        x3 = np.random.rand(n)
+        y = 3 + 0.5*x1 + x1*x2 + 1.5*x2**2 + 1.*x3 + 0.5*np.random.randn(n)
+        X = np.stack([x1, x2, x3]).T
+        coeffs, powers_arr = poly_fit_nd(X, y, order=2)
+        y_pred = poly_val_nd(X, coeffs, powers_arr)
+
+    Equavalent to LinearRegression+PolynomialFeatures from sklearn:
+        from sklearn.linear_model import LinearRegression
+        from sklearn.preprocessing import PolynomialFeatures
+        poly = PolynomialFeatures(2)
+        X_poly = poly.fit_transform(X)
+        lin = LinearRegression()
+        lin.fit(X_poly, y)
+        y_pred = lin.predict(X_poly)
     '''
 
     import statsmodels.api as sm
