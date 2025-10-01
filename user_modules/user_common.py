@@ -29,7 +29,7 @@ def hlmean_old(data, multiplier=None, verbose=True):
         idx = np.floor(np.random.rand(nsamp, 2)*ndata)
         idx = idx.astype(np.int64, copy=False)
         pairmean = np.sum(data[idx], axis=1)/2.
-    return(np.median(pairmean))
+    return np.median(pairmean)
 
 
 def hlmean(data, maxpairs=1e8, random_seed=None, verbose=True):
@@ -65,7 +65,7 @@ def hlmean(data, maxpairs=1e8, random_seed=None, verbose=True):
         pairmean = (data[idx1]+data[idx2])/2.
         hlmean_value = np.median(pairmean)
 
-    return(hlmean_value)
+    return hlmean_value
 
 
 def mad(a):
@@ -117,7 +117,7 @@ def poly_fit_1d(x, y, order=1, rlm=False, t=1.5):
     else:
         res = sm.OLS(y, a).fit()
     m = res.params
-    return(m)
+    return m
 
 
 def poly_val_1d(x, m):
@@ -183,7 +183,7 @@ def poly_fit_2d(x, y, z, order=1, rlm=False, t=1.5):
     else:
         res = sm.OLS(z, a).fit()
     m = res.params
-    return(m)
+    return m
 
 
 def poly_val_2d(x, y, m):
